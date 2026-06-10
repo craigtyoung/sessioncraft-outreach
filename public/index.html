@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SessionCraft Outreach</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230c0b14'/><circle cx='10' cy='10' r='3' fill='%23c4a1ff'/><circle cx='22' cy='10' r='3' fill='%23c4a1ff'/><circle cx='16' cy='22' r='3' fill='%23c4a1ff'/><line x1='12.5' y1='11.5' x2='14' y2='20' stroke='%23c4a1ff' stroke-width='1.5' opacity='0.6'/><line x1='19.5' y1='11.5' x2='18' y2='20' stroke='%23c4a1ff' stroke-width='1.5' opacity='0.6'/><line x1='13' y1='10' x2='19' y2='10' stroke='%23c4a1ff' stroke-width='1.5' opacity='0.6'/></svg>">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <img src="outreach.png" alt="SessionCraft Outreach" style="height:32px;" />
+      </div>
+      <nav class="tab-nav">
+        <button class="tab-btn active" data-tab="practitioners">Practitioners</button>
+        <button class="tab-btn" data-tab="organizations">Organizations</button>
+        <button class="tab-btn" data-tab="sent">Sent</button>
+        <button class="tab-btn tab-btn-marketing" data-tab="marketing">Marketing Co.</button>
+        <button class="tab-btn tab-btn-team" data-tab="team">Team</button>
+      </nav>
+      <div class="user-selector">
+        <span class="user-label">You:</span>
+        <select id="userSelect" class="user-select">
+          <option value="Craig">Craig</option>
+          <option value="Scottie">Scottie</option>
+          <option value="Christine">Christine</option>
+        </select>
+      </div>
+      <button class="btn-primary" id="btnAdd">+ Add</button>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="toolbar-inner">
+      <input type="text" id="searchInput" placeholder="Search..." class="search-input" />
+      <div class="filters" id="filterBar"></div>
+      <div class="stats" id="statsBar"></div>
+    </div>
+  </div>
+
+  <main id="mainContent"></main>
+
+  <!-- Detail Panel -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="detail-panel" id="detailPanel">
+    <div class="panel-header">
+      <div>
+        <h2 id="panelName"></h2>
+        <div id="panelMeta" class="panel-meta"></div>
+      </div>
+      <button class="close-btn" id="closePanel">✕</button>
+    </div>
+    <div class="panel-body">
+      <div class="panel-fields" id="panelFields"></div>
+      <div class="panel-log">
+        <h3>Communication Log</h3>
+        <div class="log-add">
+          <textarea id="logNote" placeholder="Add a note..." rows="3"></textarea>
+          <div class="log-add-footer">
+            <label class="log-date-label">Date: <input type="date" id="logDate" /></label>
+            <button class="btn-primary btn-sm" id="btnAddLog">Add Note</button>
+          </div>
+        </div>
+        <div id="logEntries" class="log-entries"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Contact</h2>
+        <button class="close-btn" id="closeModal">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button class="btn-secondary" id="btnModalCancel">Cancel</button>
+        <button class="btn-primary" id="btnModalSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

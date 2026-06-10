@@ -1,0 +1,71 @@
+[
+  {
+    "id": "t_scottie",
+    "name": "Scottie McCurdy",
+    "role": "Outreach Coordinator ? Team Lead (evolving)",
+    "phone": "+1 (541) 690-5228",
+    "email": "scott.mccurdie@gmail.com",
+    "source": "Dr. Joe Group",
+    "availability": "",
+    "rate": "",
+    "status": "Decision",
+    "notes": "Strong phone interview May 8. Pre-existing relationship � mutual respect, shared Dispenza world. Agreed to start next week in coordinator role. Rate TBD (sending position description range). Both see a bigger role: team manager, affiliate coordinator, spokesperson. Skills: communications, team management, software dev, AI, PR, creative thinking. Resonates with SessionCraft, Voice, and Sacred Sanctuary.",
+    "log": [
+      {
+        "id": 1778265557583,
+        "date": "2026-05-08",
+        "note": "Sent position description (PDF) + Role Vision & Evolution Map (Google Doc link). Both docs delivered via WhatsApp.",
+        "author": "Craig",
+        "createdAt": "2026-05-08T18:39:17.583Z"
+      },
+      {
+        "id": 1778263782431,
+        "date": "2026-05-08",
+        "note": "Phone interview. Pre-existing relationship, mutual respect, both in Dispenza world. Agreed to start next week in outreach coordinator role. Rate TBD - sending position description range. Both see bigger potential: team manager, affiliate coordinator, spokesperson. Skills: communications, team management, software dev, AI, PR. Resonates with all platforms (SessionCraft, Voice, Sanctuary). Next step: send position description.",
+        "author": "Craig",
+        "createdAt": "2026-05-08T18:09:42.431Z"
+      }
+    ]
+  },
+  {
+    "id": "t_christine",
+    "name": "Christine Grauer",
+    "role": "Outreach Coordinator",
+    "phone": "+1 (519) 590-4414",
+    "email": "",
+    "source": "Dr. Joe Group",
+    "availability": "",
+    "rate": "",
+    "status": "Contacted",
+    "notes": "Reached out via WhatsApp from Business & Health Professionals - DJD group. Said position sounds cool, wants to learn more.",
+    "log": [
+      {
+        "id": 1778339963025,
+        "date": "2026-05-09",
+        "note": "Call scheduled for 2:00 PM today. Hiring interview � admin coordinator role. PDF still to be sent before the call.",
+        "author": "Craig",
+        "createdAt": "2026-05-09T15:19:23.025Z"
+      },
+      {
+        "id": 1778265557620,
+        "date": "2026-05-08",
+        "note": "Initial WhatsApp reply sent. Acknowledged interest, mentioned position description coming shortly. Warm response.",
+        "author": "Craig",
+        "createdAt": "2026-05-08T18:39:17.620Z"
+      }
+    ]
+  },
+  {
+    "id": "t1778351071278",
+    "log": [],
+    "name": "Christine Grauer",
+    "role": "Admin Coordinator candidate",
+    "email": "c_grauer@yahoo.ca",
+    "phone": "",
+    "source": "SessionCraft job posting",
+    "availability": "",
+    "rate": "$28-40 CAD/hr",
+    "status": "Prospect",
+    "notes": "Coaching business (low revenue), 17-year medical sales team organizer, yoga instructor. Great intro call May 9. Very inspired by the vision. Invited to explore SessionCraft yoga modality � will upgrade to premium once she creates an account (she will WhatsApp). Mid-to-late 50s, strong team leadership background."
+  }
+]

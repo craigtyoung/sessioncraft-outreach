@@ -15,6 +15,19 @@ const TEAM_FILE = path.join(DATA_DIR, 'team.json');
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// On first boot with a volume, copy seed data if files don't exist yet
+const SEED_DIR = path.join(__dirname, 'data');
+const DATA_FILES = ['practitioners.json', 'organizations.json', 'sent.json', 'marketing.json', 'team.json'];
+if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+DATA_FILES.forEach(file => {
+  const dest = path.join(DATA_DIR, file);
+  const seed = path.join(SEED_DIR, file);
+  if (!fs.existsSync(dest) && fs.existsSync(seed)) {
+    fs.copyFileSync(seed, dest);
+    console.log(`Seeded ${file} to volume`);
+  }
+});
+
 function readJSON(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }

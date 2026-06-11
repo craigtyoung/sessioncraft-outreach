@@ -17,7 +17,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // On first boot with a volume, copy seed data if files don't exist yet
-const SEED_DIR = path.join(__dirname, 'data');
+const SEED_DIR = path.join(__dirname, 'seeds');
 const DATA_FILES = ['practitioners.json', 'organizations.json', 'sent.json', 'marketing.json', 'team.json', 'ideas.json'];
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 DATA_FILES.forEach(file => {

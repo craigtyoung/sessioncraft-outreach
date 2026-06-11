@@ -1,6 +1,6 @@
 // ===== State =====
 let currentTab = 'practitioners';
-let allData = { practitioners: [], organizations: [], sent: [], marketing: [], team: [] };
+let allData = { practitioners: [], organizations: [], sent: [], marketing: [], team: [], ideas: [] };
 let activeId = null;
 let searchQuery = '';
 let filters = { status: '', category: '', priority: '', warmth: '' };
@@ -19,6 +19,9 @@ const MARKETING_STAGES = ['Prospect', 'Contacted', 'Responded', 'Interview', 'De
 const TEAM_STAGES = ['Prospect', 'Contacted', 'Interview', 'Decision', 'Hired'];
 const TIER_STAGES = ['Individual', 'Group Leader', 'Organization'];
 const PLATFORM_FIT_OPTIONS = ['SSB', 'Voice', 'Craft'];
+const IDEAS_STAGES = ['Brainstormed', 'Discussed', 'Executing', 'Completed'];
+const IDEAS_CATEGORIES = ['Warm Market', 'Practitioner Network', 'Content', 'Events', 'Partnerships', 'Growth Mechanics', 'Paid', 'Team'];
+const IDEAS_PLATFORMS = ['General', 'SessionCraft', 'Voice', 'Sacred Songbook'];
 
 // ===== Boot =====
 async function init() {
@@ -30,18 +33,20 @@ async function init() {
 }
 
 async function fetchAll() {
-  const [p, o, s, m, t] = await Promise.all([
+  const [p, o, s, m, t, id] = await Promise.all([
     fetch('/api/practitioners').then(r => r.json()),
     fetch('/api/organizations').then(r => r.json()),
     fetch('/api/sent').then(r => r.json()),
     fetch('/api/marketing').then(r => r.json()),
-    fetch('/api/team').then(r => r.json())
+    fetch('/api/team').then(r => r.json()),
+    fetch('/api/ideas').then(r => r.json())
   ]);
   allData.practitioners = p;
   allData.organizations = o;
   allData.sent = s;
   allData.marketing = m;
   allData.team = t;
+  allData.ideas = id;
 }
 
 // ===== Render Main =====
@@ -53,11 +58,12 @@ function renderMain() {
     const html = `<div class="pipeline">${TIER_STAGES.map(t => renderColumn(t, data.filter(d => (d.tier || 'Individual') === t), 'tier')).join('')}</div>`;
     document.getElementById('mainContent').innerHTML = html;
   } else {
-    const stages = currentTab === 'practitioners' ? PRACTITIONER_STAGES : currentTab === 'marketing' ? MARKETING_STAGES : currentTab === 'team' ? TEAM_STAGES : ORG_STAGES;
+    const stages = currentTab === 'practitioners' ? PRACTITIONER_STAGES : currentTab === 'marketing' ? MARKETING_STAGES : currentTab === 'team' ? TEAM_STAGES : currentTab === 'ideas' ? IDEAS_STAGES : ORG_STAGES;
     const html = `<div class="pipeline">${stages.map(s => renderColumn(s, data.filter(d => d.status === s), 'status')).join('')}</div>`;
     document.getElementById('mainContent').innerHTML = html;
   }
   bindCardClicks();
+  if (currentTab === 'ideas') bindIdeaTooltips();
 }
 
 function renderColumn(stage, items, mode) {
@@ -77,6 +83,7 @@ function renderCard(item) {
   if (currentTab === 'practitioners') return renderPractitionerCard(item);
   if (currentTab === 'marketing') return renderMarketingCard(item);
   if (currentTab === 'team') return renderTeamCard(item);
+  if (currentTab === 'ideas') return renderIdeaCard(item);
   return renderOrgCard(item);
 }
 
@@ -136,6 +143,18 @@ function renderMarketingCard(m) {
       <div class="card-sub">${m.focus || m.source || ''}</div>
       <div class="card-sub" style="color:var(--sc-gold);font-size:11px">${m.rate || ''}</div>
       <div class="card-tags">${roleTag}${fitTag}</div>
+    </div>`;
+}
+
+function renderIdeaCard(idea) {
+  const platClass = (idea.platform || 'general').toLowerCase().replace(/\s+/g, '-');
+  const platTag = idea.platform ? `<span class="tag tag-fit tag-fit-${platClass}">${idea.platform}</span>` : '';
+  const catTag = idea.category ? `<span class="tag tag-category">${idea.category}</span>` : '';
+  const desc = (idea.description || '').replace(/"/g, '&quot;');
+  return `
+    <div class="card" data-id="${idea.id}" data-desc="${desc}" draggable="true">
+      <div class="card-name">${idea.title}</div>
+      <div class="card-tags">${platTag}${catTag}</div>
     </div>`;
 }
 
@@ -208,6 +227,15 @@ function renderFilterBar() {
     `;
     document.getElementById('fStatus').addEventListener('change', e => { filters.status = e.target.value; renderMain(); });
     document.getElementById('fRole').addEventListener('change', e => { filters.category = e.target.value; renderMain(); });
+  } else if (currentTab === 'ideas') {
+    bar.innerHTML = `
+      <select class="filter-select" id="fStatus"><option value="">All Stages</option>${IDEAS_STAGES.map(s => `<option value="${s}">${s}</option>`).join('')}</select>
+      <select class="filter-select" id="fCategory"><option value="">All Categories</option>${IDEAS_CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('')}</select>
+      <select class="filter-select" id="fPlatform"><option value="">All Platforms</option>${IDEAS_PLATFORMS.map(p => `<option value="${p}">${p}</option>`).join('')}</select>
+    `;
+    document.getElementById('fStatus').addEventListener('change', e => { filters.status = e.target.value; renderMain(); });
+    document.getElementById('fCategory').addEventListener('change', e => { filters.category = e.target.value; renderMain(); });
+    document.getElementById('fPlatform').addEventListener('change', e => { filters.warmth = e.target.value; renderMain(); });
   } else {
     const statuses = ['', ...ORG_STAGES];
     const categories = ['', ...getUnique('organizations', 'category')];
@@ -239,11 +267,14 @@ function getFilteredData() {
     const q = searchQuery.toLowerCase();
     data = data.filter(d =>
       (d.name || '').toLowerCase().includes(q) ||
+      (d.title || '').toLowerCase().includes(q) ||
+      (d.description || '').toLowerCase().includes(q) ||
       (d.email || '').toLowerCase().includes(q) ||
       (d.notes || '').toLowerCase().includes(q) ||
       (d.offering || '').toLowerCase().includes(q) ||
       (d.whyTarget || '').toLowerCase().includes(q) ||
       (d.category || '').toLowerCase().includes(q) ||
+      (d.platform || '').toLowerCase().includes(q) ||
       (d.modality || '').toLowerCase().includes(q) ||
       (d.focus || '').toLowerCase().includes(q) ||
       (d.role || '').toLowerCase().includes(q) ||
@@ -257,8 +288,9 @@ function getFilteredData() {
   if (filters.category && currentTab === 'marketing') data = data.filter(d => d.role === filters.category);
   if (filters.category && currentTab === 'team') data = data.filter(d => d.role === filters.category);
   if (filters.priority) data = data.filter(d => d.priority === filters.priority);
-  if (filters.warmth && currentTab !== 'marketing') data = data.filter(d => d.warmth === filters.warmth);
+  if (filters.warmth && currentTab !== 'marketing' && currentTab !== 'ideas') data = data.filter(d => d.warmth === filters.warmth);
   if (filters.warmth && currentTab === 'marketing') data = data.filter(d => d.platformFit === filters.warmth);
+  if (filters.warmth && currentTab === 'ideas') data = data.filter(d => d.platform === filters.warmth);
   return data;
 }
 
@@ -285,6 +317,18 @@ function renderStats() {
     `;
     return;
   }
+  if (currentTab === 'ideas') {
+    const active = data.filter(d => d.status !== 'Completed').length;
+    const executing = data.filter(d => d.status === 'Executing').length;
+    const completed = data.filter(d => d.status === 'Completed').length;
+    document.getElementById('statsBar').innerHTML = `
+      <div class="stat-chip">Total: <span>${total}</span></div>
+      <div class="stat-chip">Active: <span>${active}</span></div>
+      <div class="stat-chip">Executing: <span>${executing}</span></div>
+      <div class="stat-chip">Completed: <span>${completed}</span></div>
+    `;
+    return;
+  }
   const contacted = data.filter(d => d.status !== 'Not Contacted').length;
   const warm = currentTab === 'practitioners'
     ? data.filter(d => d.warmth === 'Hot' || d.warmth === 'Warm').length
@@ -302,7 +346,7 @@ function openPanel(id) {
   const item = allData[currentTab].find(d => d.id === id);
   if (!item) return;
 
-  document.getElementById('panelName').textContent = item.name;
+  document.getElementById('panelName').textContent = item.name || item.title || '';
   renderPanelMeta(item);
   renderPanelFields(item);
   renderLogEntries(item);
@@ -333,6 +377,12 @@ function renderPanelMeta(item) {
       ${item.source ? `<span class="tag tag-modality">${item.source}</span>` : ''}
       ${item.availability ? `<span style="color:var(--text-dim);font-size:12px">${item.availability}</span>` : ''}
     `;
+  } else if (currentTab === 'ideas') {
+    const platClass = (item.platform || 'general').toLowerCase().replace(/\s+/g, '-');
+    meta.innerHTML = `
+      ${item.platform ? `<span class="tag tag-fit tag-fit-${platClass}">${item.platform}</span>` : ''}
+      ${item.category ? `<span class="tag tag-category">${item.category}</span>` : ''}
+    `;
   } else {
     const pk = (item.priority || '').replace('+', 'p');
     meta.innerHTML = `
@@ -344,6 +394,59 @@ function renderPanelMeta(item) {
 }
 
 function renderPanelFields(item) {
+  // Ideas tab — handled separately
+  if (currentTab === 'ideas') {
+    const ideaStatusOpts = IDEAS_STAGES.map(s => `<option value="${s}"${s === (item.status || 'Brainstormed') ? ' selected' : ''}>${s}</option>`).join('');
+    const platOpts = IDEAS_PLATFORMS.map(p => `<option value="${p}"${p === (item.platform || 'General') ? ' selected' : ''}>${p}</option>`).join('');
+    const catOpts = IDEAS_CATEGORIES.map(c => `<option value="${c}"${c === (item.category || '') ? ' selected' : ''}>${c}</option>`).join('');
+    let fields = `
+      <div class="field-row">
+        <span class="field-label">Status</span>
+        <select class="field-inline-select" id="inlineStatus">${ideaStatusOpts}</select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Platform</span>
+        <select class="field-inline-select" id="inlinePlatform">${platOpts}</select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Category</span>
+        <select class="field-inline-select" id="inlineCategory">${catOpts}</select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Description</span>
+        <span class="field-value" style="white-space:pre-wrap;font-size:12px;color:var(--text-dim);line-height:1.5">${escHtml(item.description || '—')}</span>
+      </div>
+    `;
+    if (item.notes) fields += `<div class="field-note">${escHtml(item.notes)}</div>`;
+    fields += '<div class="panel-delete-action"><button class="btn-delete-record" id="btnDeleteRecord">Delete this idea</button></div>';
+    document.getElementById('panelFields').innerHTML = fields;
+
+    document.getElementById('inlineStatus').addEventListener('change', async (e) => {
+      await fetch(`/api/ideas/${activeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: e.target.value }) });
+      const idx = allData.ideas.findIndex(d => d.id === activeId);
+      if (idx !== -1) allData.ideas[idx].status = e.target.value;
+      renderMain();
+    });
+    document.getElementById('inlinePlatform').addEventListener('change', async (e) => {
+      await fetch(`/api/ideas/${activeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ platform: e.target.value }) });
+      const idx = allData.ideas.findIndex(d => d.id === activeId);
+      if (idx !== -1) { allData.ideas[idx].platform = e.target.value; renderPanelMeta(allData.ideas[idx]); renderMain(); }
+    });
+    document.getElementById('inlineCategory').addEventListener('change', async (e) => {
+      await fetch(`/api/ideas/${activeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category: e.target.value }) });
+      const idx = allData.ideas.findIndex(d => d.id === activeId);
+      if (idx !== -1) { allData.ideas[idx].category = e.target.value; renderPanelMeta(allData.ideas[idx]); renderMain(); }
+    });
+    document.getElementById('btnDeleteRecord').addEventListener('click', async () => {
+      if (!confirm('Delete this idea?')) return;
+      await fetch('/api/ideas/' + item.id, { method: 'DELETE' });
+      allData.ideas = allData.ideas.filter(d => d.id !== item.id);
+      closePanel();
+      renderMain();
+    });
+    return;
+  }
+
   const stages = currentTab === 'practitioners' ? PRACTITIONER_STAGES : currentTab === 'marketing' ? MARKETING_STAGES : currentTab === 'team' ? TEAM_STAGES : ORG_STAGES;
   const stageOptions = stages.map(s => `<option value="${s}"${s === item.status ? ' selected' : ''}>${s}</option>`).join('');
 
@@ -878,7 +981,7 @@ async function addLogEntry() {
   const note = document.getElementById('logNote').value.trim();
   if (!note) return;
   const date = document.getElementById('logDate').value || today();
-  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : 'organizations';
+  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : currentTab === 'ideas' ? 'ideas' : 'organizations';
   const targetId = activeId;
   const targetTab = currentTab;
   const entry = await fetch(`/api/${endpoint}/${targetId}/log`, {
@@ -895,7 +998,7 @@ async function addLogEntry() {
 }
 
 async function deleteLogEntry(logId) {
-  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : 'organizations';
+  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : currentTab === 'ideas' ? 'ideas' : 'organizations';
   const targetId = activeId;
   const targetTab = currentTab;
   await fetch(`/api/${endpoint}/${targetId}/log/${logId}`, { method: 'DELETE' });
@@ -914,7 +1017,7 @@ function closePanel() {
 
 // ===== Add Modal =====
 function openAddModal() {
-  const titles = { practitioners: 'Add Practitioner', organizations: 'Add Organization', sent: 'Log Email', marketing: 'Add Company', team: 'Add Candidate' };
+  const titles = { practitioners: 'Add Practitioner', organizations: 'Add Organization', sent: 'Log Email', marketing: 'Add Company', team: 'Add Candidate', ideas: 'New Idea' };
   document.getElementById('modalTitle').textContent = titles[currentTab] || 'Add';
   if (currentTab === 'sent') {
     document.getElementById('modalBody').innerHTML = sentForm();
@@ -925,6 +1028,7 @@ function openAddModal() {
   if (currentTab === 'practitioners') formHtml = practitionerForm();
   else if (currentTab === 'marketing') formHtml = marketingForm();
   else if (currentTab === 'team') formHtml = teamForm();
+  else if (currentTab === 'ideas') formHtml = ideaForm();
   else formHtml = orgForm();
   document.getElementById('modalBody').innerHTML = formHtml;
   document.getElementById('modalOverlay').classList.add('active');
@@ -1060,12 +1164,50 @@ function marketingForm(data = {}) {
   `;
 }
 
+function ideaForm(data = {}) {
+  const statusOpts = IDEAS_STAGES.map(s => `<option value="${s}"${s === (data.status || 'Brainstormed') ? ' selected' : ''}>${s}</option>`).join('');
+  const platOpts = IDEAS_PLATFORMS.map(p => `<option value="${p}"${p === (data.platform || 'General') ? ' selected' : ''}>${p}</option>`).join('');
+  const catOpts = ['', ...IDEAS_CATEGORIES].map(c => `<option value="${c}"${c === (data.category || '') ? ' selected' : ''}>${c || '—'}</option>`).join('');
+  return `
+    <div class="form-group"><label>Title *</label><input class="form-input" id="fName" placeholder="Idea title..." value="${data.title || ''}" /></div>
+    <div class="form-row">
+      <div class="form-group"><label>Platform</label><select class="form-select" id="fPlatform">${platOpts}</select></div>
+      <div class="form-group"><label>Category</label><select class="form-select" id="fCategory">${catOpts}</select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Status</label><select class="form-select" id="fStatus">${statusOpts}</select></div>
+    </div>
+    <div class="form-group"><label>Description</label><textarea class="form-textarea" id="fDescription" rows="4" placeholder="What's the idea? Who does it reach? How does it work?">${data.description || ''}</textarea></div>
+    <div class="form-group"><label>Notes</label><textarea class="form-textarea" id="fNotes" rows="2">${data.notes || ''}</textarea></div>
+  `;
+}
+
 async function saveModal() {
   const name = document.getElementById('fName').value.trim();
   if (!name) return;
 
   let payload = {};
-  if (currentTab === 'team') {
+  if (currentTab === 'ideas') {
+    payload = {
+      title: name,
+      platform: document.getElementById('fPlatform').value,
+      category: document.getElementById('fCategory').value,
+      status: document.getElementById('fStatus').value,
+      description: document.getElementById('fDescription').value.trim(),
+      notes: document.getElementById('fNotes').value.trim(),
+      log: []
+    };
+    const res = await fetch('/api/ideas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(r => r.json());
+    allData.ideas.push(res);
+    closeModalFn();
+    renderFilterBar();
+    renderMain();
+    return;
+  } else if (currentTab === 'team') {
     payload = {
       name,
       role: document.getElementById('fRole').value.trim(),
@@ -1182,7 +1324,7 @@ function bindGlobalEvents() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       currentTab = btn.dataset.tab;
-      const addLabels = { sent: '+ Log Email', marketing: '+ Add Company', team: '+ Add Candidate' };
+      const addLabels = { sent: '+ Log Email', marketing: '+ Add Company', team: '+ Add Candidate', ideas: '+ New Idea' };
       document.getElementById('btnAdd').textContent = addLabels[currentTab] || '+ Add';
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -1223,6 +1365,36 @@ function bindGlobalEvents() {
   document.getElementById('modalOverlay').addEventListener('click', e => {
     if (e.target === document.getElementById('modalOverlay')) closeModalFn();
   });
+}
+
+function bindIdeaTooltips() {
+  const tooltip = document.getElementById('idea-tooltip');
+  if (!tooltip) return;
+  document.querySelectorAll('.card[data-desc]').forEach(card => {
+    card.addEventListener('mouseenter', (e) => {
+      const desc = card.dataset.desc;
+      if (!desc) return;
+      tooltip.textContent = desc;
+      tooltip.classList.add('visible');
+      positionTooltip(e, tooltip);
+    });
+    card.addEventListener('mousemove', (e) => {
+      positionTooltip(e, tooltip);
+    });
+    card.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('visible');
+    });
+  });
+}
+
+function positionTooltip(e, tooltip) {
+  const pad = 16;
+  let x = e.clientX + pad;
+  let y = e.clientY + pad;
+  if (x + 270 > window.innerWidth) x = e.clientX - 270 - pad;
+  if (y + 180 > window.innerHeight) y = e.clientY - 180;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
 }
 
 function bindCardClicks() {
@@ -1294,7 +1466,7 @@ document.addEventListener('drop', async e => {
   const colMode = col.dataset.mode || 'status';
   draggedId = null;
   if (!id || !newStage) return;
-  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : 'organizations';
+  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : currentTab === 'ideas' ? 'ideas' : 'organizations';
   const updateField = colMode === 'tier' ? 'tier' : 'status';
   await fetch(`/api/${endpoint}/${id}`, {
     method: 'PUT',

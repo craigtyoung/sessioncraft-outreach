@@ -11,13 +11,14 @@ const ORGANIZATIONS_FILE = path.join(DATA_DIR, 'organizations.json');
 const SENT_FILE = path.join(DATA_DIR, 'sent.json');
 const MARKETING_FILE = path.join(DATA_DIR, 'marketing.json');
 const TEAM_FILE = path.join(DATA_DIR, 'team.json');
+const IDEAS_FILE = path.join(DATA_DIR, 'ideas.json');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // On first boot with a volume, copy seed data if files don't exist yet
 const SEED_DIR = path.join(__dirname, 'data');
-const DATA_FILES = ['practitioners.json', 'organizations.json', 'sent.json', 'marketing.json', 'team.json'];
+const DATA_FILES = ['practitioners.json', 'organizations.json', 'sent.json', 'marketing.json', 'team.json', 'ideas.json'];
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 DATA_FILES.forEach(file => {
   const dest = path.join(DATA_DIR, file);
@@ -334,6 +335,61 @@ app.delete('/api/team/:id/log/:logId', (req, res) => {
   if (idx === -1) return res.status(404).json({ error: 'Not found' });
   data[idx].log = data[idx].log.filter(e => String(e.id) !== req.params.logId);
   writeJSON(TEAM_FILE, data);
+  res.json({ ok: true });
+});
+
+// --- Ideas ---
+
+app.get('/api/ideas', (req, res) => {
+  res.json(readJSON(IDEAS_FILE));
+});
+
+app.post('/api/ideas', (req, res) => {
+  const data = readJSON(IDEAS_FILE);
+  const entry = { id: 'i' + Date.now(), log: [], createdAt: new Date().toISOString().split('T')[0], ...req.body };
+  data.push(entry);
+  writeJSON(IDEAS_FILE, data);
+  res.json(entry);
+});
+
+app.put('/api/ideas/:id', (req, res) => {
+  const data = readJSON(IDEAS_FILE);
+  const idx = data.findIndex(i => i.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  data[idx] = { ...data[idx], ...req.body };
+  writeJSON(IDEAS_FILE, data);
+  res.json(data[idx]);
+});
+
+app.delete('/api/ideas/:id', (req, res) => {
+  const data = readJSON(IDEAS_FILE);
+  const filtered = data.filter(i => i.id !== req.params.id);
+  writeJSON(IDEAS_FILE, filtered);
+  res.json({ ok: true });
+});
+
+app.post('/api/ideas/:id/log', (req, res) => {
+  const data = readJSON(IDEAS_FILE);
+  const idx = data.findIndex(i => i.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  const entry = {
+    id: Date.now(),
+    date: req.body.date || new Date().toISOString().split('T')[0],
+    note: req.body.note,
+    author: req.body.author || 'Craig',
+    createdAt: new Date().toISOString()
+  };
+  data[idx].log.unshift(entry);
+  writeJSON(IDEAS_FILE, data);
+  res.json(entry);
+});
+
+app.delete('/api/ideas/:id/log/:logId', (req, res) => {
+  const data = readJSON(IDEAS_FILE);
+  const idx = data.findIndex(i => i.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  data[idx].log = data[idx].log.filter(e => String(e.id) !== req.params.logId);
+  writeJSON(IDEAS_FILE, data);
   res.json({ ok: true });
 });
 

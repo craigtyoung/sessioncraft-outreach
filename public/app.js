@@ -34,12 +34,12 @@ async function init() {
 
 async function fetchAll() {
   const [p, o, s, m, t, id] = await Promise.all([
-    fetch('/api/practitioners').then(r => r.json()),
-    fetch('/api/organizations').then(r => r.json()),
-    fetch('/api/sent').then(r => r.json()),
-    fetch('/api/marketing').then(r => r.json()),
-    fetch('/api/team').then(r => r.json()),
-    fetch('/api/ideas').then(r => r.json())
+    fetch('/api/practitioners').then(r => r.json()).catch(() => []),
+    fetch('/api/organizations').then(r => r.json()).catch(() => []),
+    fetch('/api/sent').then(r => r.json()).catch(() => []),
+    fetch('/api/marketing').then(r => r.json()).catch(() => []),
+    fetch('/api/team').then(r => r.json()).catch(() => []),
+    fetch('/api/ideas').then(r => r.json()).catch(() => [])
   ]);
   allData.practitioners = p;
   allData.organizations = o;

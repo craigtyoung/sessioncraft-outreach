@@ -29,8 +29,12 @@ DATA_FILES.forEach(file => {
   }
 });
 
-function readJSON(filePath) {
-  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+function readJSON(filePath, defaultValue = []) {
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  } catch {
+    return defaultValue;
+  }
 }
 
 function writeJSON(filePath, data) {

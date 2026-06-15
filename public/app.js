@@ -351,7 +351,86 @@ function renderPanelMeta(item) {
       ${item.modality ? `<span class="tag tag-modality">${item.modality}</span>` : ''}
       <span style="color:var(--text-dim)">${item.source || ''}</span>
     `;
-  } else if (currentTab === 'practitioners') {
+  } else if (currentTab === 'ideas') {
+    const platClass = (item.platform || 'general').toLowerCase().replace(/\s+/g, '-');
+    meta.innerHTML = `
+      ${item.platform ? `<span class="tag tag-fit tag-fit-${platClass}">${item.platform}</span>` : ''}
+      ${item.category ? `<span class="tag tag-category">${item.category}</span>` : ''}
+    `;
+  } else {
+    const pk = (item.priority || '').replace('+', 'p');
+    meta.innerHTML = `
+      <span class="priority-badge priority-${pk}" style="position:static;font-size:11px">${item.priority || ''}</span>
+      ${item.category ? `<span class="tag tag-category">${item.category}</span>` : ''}
+      ${item.warmConnection ? `<span class="tag tag-connection">Warm Connection</span>` : ''}
+    `;
+  }
+}
+
+function renderPanelFields(item) {
+  let fields = '';
+
+  if (currentTab === 'ideas') {
+    const ideaStatusOpts = IDEAS_STAGES.map(s => `<option value="${s}"${s === (item.status || 'Brainstormed') ? ' selected' : ''}>${s}</option>`).join('');
+    const platOpts = IDEAS_PLATFORMS.map(p => `<option value="${p}"${p === (item.platform || 'General') ? ' selected' : ''}>${p}</option>`).join('');
+    const catOpts = ['', ...IDEAS_CATEGORIES].map(c => `<option value="${c}"${c === (item.category || '') ? ' selected' : ''}>${c || '—'}</option>`).join('');
+    fields = `
+      <div class="field-row">
+        <span class="field-label">Status</span>
+        <select class="field-inline-select" id="inlineStatus">${ideaStatusOpts}</select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Platform</span>
+        <select class="field-inline-select" id="inlinePlatform">${platOpts}</select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Category</span>
+        <select class="field-inline-select" id="inlineCategory">${catOpts}</select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Description</span>
+        <span class="field-value" style="white-space:pre-wrap;font-size:12px;color:var(--text-dim);line-height:1.5">${escHtml(item.description || '—')}</span>
+      </div>
+    `;
+    if (item.notes) fields += `<div class="field-note">${escHtml(item.notes)}</div>`;
+    fields += '<div class="panel-delete-action"><button class="btn-delete-record" id="btnDeleteRecord">Delete this idea</button></div>';
+    document.getElementById('panelFields').innerHTML = fields;
+    document.getElementById('inlineStatus').addEventListener('change', async (e) => {
+      await fetch(`/api/ideas/${activeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: e.target.value }) });
+      const idx = allData.ideas.findIndex(d => d.id === activeId);
+      if (idx !== -1) allData.ideas[idx].status = e.target.value;
+      renderMain();
+    });
+    document.getElementById('inlinePlatform').addEventListener('change', async (e) => {
+      await fetch(`/api/ideas/${activeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ platform: e.target.value }) });
+      const idx = allData.ideas.findIndex(d => d.id === activeId);
+      if (idx !== -1) { allData.ideas[idx].platform = e.target.value; renderPanelMeta(allData.ideas[idx]); renderMain(); }
+    });
+    document.getElementById('inlineCategory').addEventListener('change', async (e) => {
+      await fetch(`/api/ideas/${activeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category: e.target.value }) });
+      const idx = allData.ideas.findIndex(d => d.id === activeId);
+      if (idx !== -1) { allData.ideas[idx].category = e.target.value; renderPanelMeta(allData.ideas[idx]); renderMain(); }
+    });
+    document.getElementById('btnDeleteRecord').addEventListener('click', async () => {
+      if (!confirm('Delete this idea?')) return;
+      await fetch('/api/ideas/' + item.id, { method: 'DELETE' });
+      allData.ideas = allData.ideas.filter(d => d.id !== item.id);
+      closePanel();
+      renderMain();
+    });
+    return;
+  }
+
+  const stages = currentTab === 'practitioners' ? PRACTITIONER_STAGES : ORG_STAGES;
+  const stageOptions = stages.map(s => `<option value="${s}"${s === item.status ? ' selected' : ''}>${s}</option>`).join('');
+  fields = `
+    <div class="field-row">
+      <span class="field-label">Status</span>
+      <select class="field-inline-select" id="inlineStatus">${stageOptions}</select>
+    </div>
+  `;
+
+  if (currentTab === 'practitioners') {
     const tierOpts = TIER_STAGES.map(t => `<option value="${t}"${t === (item.tier || 'Individual') ? ' selected' : ''}>${t}</option>`).join('');
     const assignedOpts = TEAM_MEMBERS.map(m => `<option value="${m}"${m === (item.assigned_to || '') ? ' selected' : ''}>${m}</option>`).join('');
     const landedOpts = ['', ...TEAM_MEMBERS].map(m => `<option value="${m}"${m === (item.landed_by || '') ? ' selected' : ''}>${m || '—'}</option>`).join('');
@@ -359,28 +438,24 @@ function renderPanelMeta(item) {
     const fitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" class="pfit-cb" data-fit="${f}" ${(item.platform_fit || []).includes(f) ? 'checked' : ''} /> ${f}</label>`).join('');
     fields += `
       <div class="field-row">
+        <span class="field-label">Email</span>
+        <span class="field-value">${item.email ? `<a href="mailto:${item.email}">${item.email}</a>` : '—'}</span>
+      </div>
+      <div class="field-row">
         <span class="field-label">Assigned To</span>
-        <span class="field-value">
-          <select class="field-inline-select" id="inlineAssigned">${assignedOpts}</select>
-        </span>
+        <span class="field-value"><select class="field-inline-select" id="inlineAssigned">${assignedOpts}</select></span>
       </div>
       <div class="field-row">
         <span class="field-label">Channel</span>
-        <span class="field-value">
-          <select class="field-inline-select" id="inlineChannel">${channelOpts}</select>
-        </span>
+        <span class="field-value"><select class="field-inline-select" id="inlineChannel">${channelOpts}</select></span>
       </div>
       <div class="field-row">
         <span class="field-label">Tier</span>
-        <span class="field-value">
-          <select class="field-inline-select" id="inlineTier">${tierOpts}</select>
-        </span>
+        <span class="field-value"><select class="field-inline-select" id="inlineTier">${tierOpts}</select></span>
       </div>
       <div class="field-row">
         <span class="field-label">Landed By</span>
-        <span class="field-value">
-          <select class="field-inline-select" id="inlineLandedBy">${landedOpts}</select>
-        </span>
+        <span class="field-value"><select class="field-inline-select" id="inlineLandedBy">${landedOpts}</select></span>
       </div>
       <div class="field-row">
         <span class="field-label">Platform Fit</span>
@@ -414,27 +489,19 @@ function renderPanelMeta(item) {
     fields += `
       <div class="field-row">
         <span class="field-label">Assigned To</span>
-        <span class="field-value">
-          <select class="field-inline-select" id="inlineAssigned">${orgAssignedOpts}</select>
-        </span>
+        <span class="field-value"><select class="field-inline-select" id="inlineAssigned">${orgAssignedOpts}</select></span>
       </div>
       <div class="field-row">
         <span class="field-label">Channel</span>
-        <span class="field-value">
-          <select class="field-inline-select" id="inlineChannel">${orgChannelOpts}</select>
-        </span>
+        <span class="field-value"><select class="field-inline-select" id="inlineChannel">${orgChannelOpts}</select></span>
       </div>
       <div class="field-row">
         <span class="field-label">Tier</span>
-        <span class="field-value">
-          <select class="field-inline-select" id="inlineTier">${orgTierOpts}</select>
-        </span>
+        <span class="field-value"><select class="field-inline-select" id="inlineTier">${orgTierOpts}</select></span>
       </div>
       <div class="field-row">
         <span class="field-label">Landed By</span>
-        <span class="field-value">
-          <select class="field-inline-select" id="inlineLandedBy">${orgLandedOpts}</select>
-        </span>
+        <span class="field-value"><select class="field-inline-select" id="inlineLandedBy">${orgLandedOpts}</select></span>
       </div>
       <div class="field-row">
         <span class="field-label">Platform Fit</span>
@@ -475,25 +542,19 @@ function renderPanelMeta(item) {
     fields += `<div class="field-note">${item.notes}</div>`;
   }
 
-  // Log Email quick-action
-
-  // Delete button
   const deleteLabel = currentTab === 'practitioners' ? 'practitioner' : 'organization';
   fields += '<div class="panel-delete-action"><button class="btn-delete-record" id="btnDeleteRecord">Delete this ' + deleteLabel + '</button></div>';
 
-  // Contacts section for orgs
   if (currentTab === 'organizations') {
     fields += renderContactsSection(item);
   }
 
   document.getElementById('panelFields').innerHTML = fields;
 
-  // Bind contact interactions for orgs only
   if (currentTab === 'organizations') {
     bindContactEvents(item);
   }
 
-  // Status change
   document.getElementById('inlineStatus').addEventListener('change', async (e) => {
     const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
     await fetch(`/api/${endpoint}/${activeId}`, {
@@ -506,7 +567,6 @@ function renderPanelMeta(item) {
     renderMain();
   });
 
-  // Assigned To change
   const assignedSel = document.getElementById('inlineAssigned');
   if (assignedSel) {
     assignedSel.addEventListener('change', async (e) => {
@@ -522,7 +582,6 @@ function renderPanelMeta(item) {
     });
   }
 
-  // Tier change
   const tierSel = document.getElementById('inlineTier');
   if (tierSel) {
     tierSel.addEventListener('change', async (e) => {
@@ -538,7 +597,6 @@ function renderPanelMeta(item) {
     });
   }
 
-  // Channel change
   const channelSel = document.getElementById('inlineChannel');
   if (channelSel) {
     channelSel.addEventListener('change', async (e) => {
@@ -554,7 +612,6 @@ function renderPanelMeta(item) {
     });
   }
 
-  // Landed By change
   const landedSel = document.getElementById('inlineLandedBy');
   if (landedSel) {
     landedSel.addEventListener('change', async (e) => {
@@ -570,7 +627,6 @@ function renderPanelMeta(item) {
     });
   }
 
-  // Platform Fit checkboxes
   document.querySelectorAll('.pfit-cb').forEach(cb => {
     cb.addEventListener('change', async () => {
       const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
@@ -586,11 +642,9 @@ function renderPanelMeta(item) {
     });
   });
 
-  // Delete record button
   const deleteBtn = document.getElementById('btnDeleteRecord');
   if (deleteBtn) {
     deleteBtn.addEventListener('click', async () => {
-      const label = currentTab === 'practitioners' ? 'practitioner' : 'organization';
       if (!confirm('Delete ' + item.name + '? This cannot be undone.')) return;
       const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
       await fetch('/api/' + endpoint + '/' + item.id, { method: 'DELETE' });
@@ -600,13 +654,11 @@ function renderPanelMeta(item) {
     });
   }
 
-  // Checkbox changes (practitioners and team)
-  document.querySelectorAll('.field-checkboxes input[type="checkbox"]').forEach(cb => {
+  document.querySelectorAll('.field-checkboxes input[data-field]').forEach(cb => {
     cb.addEventListener('change', async (e) => {
       const field = e.target.dataset.field;
       const val = e.target.checked;
-      const cbEndpoint = 'practitioners';
-      await fetch(`/api/${cbEndpoint}/${activeId}`, {
+      await fetch(`/api/practitioners/${activeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ [field]: val })
@@ -616,6 +668,7 @@ function renderPanelMeta(item) {
       renderMain();
     });
   });
+}
 }
 
 // ===== Contacts (Org sub-layer) =====
@@ -1131,6 +1184,8 @@ async function saveModal() {
 
 function closeModalFn() {
   document.getElementById('modalOverlay').classList.remove('active');
+  const saveBtn = document.getElementById('btnModalSave');
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
   modalSaveAction = null;
 }
 

@@ -1022,8 +1022,20 @@ function ideaForm(data = {}) {
 }
 
 async function saveModal() {
-  const name = document.getElementById('fName').value.trim();
-  if (!name) return;
+  const nameEl = document.getElementById('fName');
+  if (!nameEl) { console.error('saveModal: fName not found'); return; }
+  const name = nameEl.value.trim();
+  if (!name) {
+    nameEl.style.border = '1px solid #e57373';
+    nameEl.focus();
+    return;
+  }
+  nameEl.style.border = '';
+
+  const saveBtn = document.getElementById('btnModalSave');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+
+  try {
 
   let payload = {};
   if (currentTab === 'ideas') {
@@ -1036,21 +1048,17 @@ async function saveModal() {
       notes: document.getElementById('fNotes').value.trim(),
       log: []
     };
-    try {
-      const r = await fetch('/api/ideas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!r.ok) throw new Error(`Server error ${r.status}`);
-      const res = await r.json();
-      allData.ideas.push(res);
-      closeModalFn();
-      renderFilterBar();
-      renderMain();
-    } catch (err) {
-      alert('Save failed: ' + err.message + '\nCheck your connection and try again.');
-    }
+    const r = await fetch('/api/ideas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) throw new Error(`Server error ${r.status}`);
+    const res = await r.json();
+    allData.ideas.push(res);
+    closeModalFn();
+    renderFilterBar();
+    renderMain();
     return;
   } else if (currentTab === 'practitioners') {
     const fitSelected = Array.from(document.querySelectorAll('input[name="fPlatformFit"]:checked')).map(c => c.value);
@@ -1094,20 +1102,22 @@ async function saveModal() {
   }
 
   const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
-  try {
-    const r = await fetch(`/api/${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    if (!r.ok) throw new Error(`Server error ${r.status}`);
-    const res = await r.json();
-    allData[currentTab].push(res);
-    closeModalFn();
-    renderFilterBar();
-    renderMain();
+  const r = await fetch(`/api/${endpoint}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!r.ok) throw new Error(`Server error ${r.status}`);
+  const res = await r.json();
+  allData[currentTab].push(res);
+  closeModalFn();
+  renderFilterBar();
+  renderMain();
+
   } catch (err) {
-    alert('Save failed: ' + err.message + '\nCheck your connection and try again.');
+    console.error('saveModal error:', err);
+    alert('Save failed: ' + err.message);
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
   }
 }
 

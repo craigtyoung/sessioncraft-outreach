@@ -1102,11 +1102,19 @@ async function saveModal() {
   }
 
   const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
-  const r = await fetch(`/api/${endpoint}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 10000);
+  let r;
+  try {
+    r = await fetch(`/api/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal
+    });
+  } finally {
+    clearTimeout(timer);
+  }
   if (!r.ok) throw new Error(`Server error ${r.status}`);
   const res = await r.json();
   allData[currentTab].push(res);

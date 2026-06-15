@@ -55,19 +55,28 @@ function writeJSON(filePath, data) {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 }
 
+function postHandler(file, buildEntry) {
+  return (req, res) => {
+    try {
+      const data = readJSON(file);
+      const entry = buildEntry(req.body);
+      data.push(entry);
+      writeJSON(file, data);
+      res.json(entry);
+    } catch (err) {
+      console.error('POST error:', err);
+      res.status(500).json({ error: err.message });
+    }
+  };
+}
+
 // --- Practitioners ---
 
 app.get('/api/practitioners', (req, res) => {
   res.json(readJSON(PRACTITIONERS_FILE));
 });
 
-app.post('/api/practitioners', (req, res) => {
-  const data = readJSON(PRACTITIONERS_FILE);
-  const entry = { id: 'p' + Date.now(), log: [], ...req.body };
-  data.push(entry);
-  writeJSON(PRACTITIONERS_FILE, data);
-  res.json(entry);
-});
+app.post('/api/practitioners', postHandler(PRACTITIONERS_FILE, body => ({ id: 'p' + Date.now(), log: [], ...body })));
 
 app.put('/api/practitioners/:id', (req, res) => {
   const data = readJSON(PRACTITIONERS_FILE);
@@ -116,13 +125,7 @@ app.get('/api/organizations', (req, res) => {
   res.json(readJSON(ORGANIZATIONS_FILE));
 });
 
-app.post('/api/organizations', (req, res) => {
-  const data = readJSON(ORGANIZATIONS_FILE);
-  const entry = { id: 'o' + Date.now(), log: [], ...req.body };
-  data.push(entry);
-  writeJSON(ORGANIZATIONS_FILE, data);
-  res.json(entry);
-});
+app.post('/api/organizations', postHandler(ORGANIZATIONS_FILE, body => ({ id: 'o' + Date.now(), log: [], contacts: [], ...body })));
 
 app.put('/api/organizations/:id', (req, res) => {
   const data = readJSON(ORGANIZATIONS_FILE);

@@ -1408,6 +1408,8 @@ function bindGlobalEvents() {
     userSel.addEventListener('change', e => {
       currentUser = e.target.value;
       localStorage.setItem('sc_user', currentUser);
+      showMineOnly = true;
+      localStorage.setItem('sc_mine', 'true');
       renderFilterBar();
       renderMain();
     });

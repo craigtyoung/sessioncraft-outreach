@@ -17,6 +17,18 @@ const GOALS_FILE = path.join(DATA_DIR, 'goals.json');
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Migrate: ensure all unassigned practitioners + orgs are assigned to Craig
+function migrateAssignedTo() {
+  [PRACTITIONERS_FILE, ORGANIZATIONS_FILE].forEach(file => {
+    const records = readJSON(file);
+    if (!Array.isArray(records)) return;
+    const needsUpdate = records.some(r => !r.assigned_to);
+    if (!needsUpdate) return;
+    writeJSON(file, records.map(r => r.assigned_to ? r : { ...r, assigned_to: 'Craig' }));
+    console.log(`Migrated assigned_to in ${path.basename(file)}`);
+  });
+}
+
 // On first boot with a volume, copy seed data if files don't exist yet
 const SEED_DIR = path.join(__dirname, 'seeds');
 const DATA_FILES = ['practitioners.json', 'organizations.json', 'sent.json', 'marketing.json', 'team.json', 'ideas.json'];
@@ -29,6 +41,7 @@ DATA_FILES.forEach(file => {
     console.log(`Seeded ${file} to volume`);
   }
 });
+migrateAssignedTo();
 
 function readJSON(filePath, defaultValue = []) {
   try {

@@ -11,6 +11,8 @@ const TEAM_MEMBERS = ['Craig', 'Scottie', 'Christine'];
 let currentUser = localStorage.getItem('sc_user') || 'Craig';
 let showMineOnly = localStorage.getItem('sc_mine') !== 'false'; // default true
 let kanbanMode = 'status'; // 'status' | 'tier'
+let goals = { weekly_target: 15 };
+let currentTheme = localStorage.getItem('sc_theme') || 'dark';
 
 // ===== Pipeline Stages =====
 const PRACTITIONER_STAGES = ['Not Contacted', 'Contacted', 'Responded', 'Account Created', 'Demo Done', 'Onboarded', 'Affiliate'];
@@ -25,7 +27,9 @@ const IDEAS_PLATFORMS = ['General', 'SessionCraft', 'Voice', 'Sacred Songbook'];
 
 // ===== Boot =====
 async function init() {
+  applyTheme();
   await fetchAll();
+  renderGoalsBar();
   renderFilterBar();
   renderMain();
   bindGlobalEvents();
@@ -33,13 +37,14 @@ async function init() {
 }
 
 async function fetchAll() {
-  const [p, o, s, m, t, id] = await Promise.all([
+  const [p, o, s, m, t, id, g] = await Promise.all([
     fetch('/api/practitioners').then(r => r.json()).catch(() => []),
     fetch('/api/organizations').then(r => r.json()).catch(() => []),
     fetch('/api/sent').then(r => r.json()).catch(() => []),
     fetch('/api/marketing').then(r => r.json()).catch(() => []),
     fetch('/api/team').then(r => r.json()).catch(() => []),
-    fetch('/api/ideas').then(r => r.json()).catch(() => [])
+    fetch('/api/ideas').then(r => r.json()).catch(() => []),
+    fetch('/api/goals').then(r => r.json()).catch(() => ({ weekly_target: 15 }))
   ]);
   allData.practitioners = p;
   allData.organizations = o;
@@ -47,6 +52,61 @@ async function fetchAll() {
   allData.marketing = m;
   allData.team = t;
   allData.ideas = id;
+  goals = g;
+}
+
+// ===== Goals Bar =====
+function getThisWeekTouches() {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - ((day + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
+  const mondayISO = monday.toISOString().split('T')[0];
+  let count = 0;
+  [...allData.practitioners, ...allData.organizations].forEach(item => {
+    (item.log || []).forEach(e => { if (e.date >= mondayISO) count++; });
+  });
+  return count;
+}
+
+function renderGoalsBar() {
+  const bar = document.getElementById('goalsBar');
+  if (!bar) return;
+  const touches = getThisWeekTouches();
+  const target = goals.weekly_target || 15;
+  const pct = Math.min(100, Math.round((touches / target) * 100));
+  const done = touches >= target;
+  bar.innerHTML = `
+    <div class="goals-bar-inner">
+      <span class="goals-label">This Week</span>
+      <div class="goals-progress-track">
+        <div class="goals-progress-fill${done ? ' goals-done' : ''}" style="width:${pct}%"></div>
+      </div>
+      <span class="goals-count${done ? ' goals-done' : ''}">${touches}</span>
+      <span class="goals-sep">/</span>
+      <div class="goals-target-wrap">
+        <span class="goals-target-label">target:</span>
+        <input type="number" class="goals-input" id="goalsTargetInput" value="${target}" min="1" max="200" />
+      </div>
+    </div>`;
+  document.getElementById('goalsTargetInput').addEventListener('change', async (e) => {
+    const val = parseInt(e.target.value, 10);
+    if (!val || val < 1) return;
+    goals.weekly_target = val;
+    await fetch('/api/goals', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ weekly_target: val })
+    });
+    renderGoalsBar();
+  });
+}
+
+function applyTheme() {
+  document.body.setAttribute('data-theme', currentTheme);
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = currentTheme === 'dark' ? '☀' : '☽';
 }
 
 // ===== Render Main =====
@@ -95,11 +155,12 @@ function renderPractitionerCard(p) {
   const modTag = p.modality ? `<span class="tag tag-modality">${p.modality}</span>` : '';
   const assignedTag = p.assigned_to && p.assigned_to !== currentUser ? `<span class="tag tag-assigned">${p.assigned_to}</span>` : '';
   const fitTags = (p.platform_fit || []).map(f => `<span class="tag tag-fit tag-fit-${f.toLowerCase()}">${f}</span>`).join('');
+  const landedTag = p.landed_by ? `<span class="tag tag-landed">${p.landed_by}</span>` : '';
   return `
     <div class="card" data-id="${p.id}" draggable="true">
       <div class="card-name">${p.name}</div>
       <div class="card-sub">${p.source || ''}</div>
-      <div class="card-tags">${warmTag}${modTag}${acctTag}${demoTag}${playlistTag}${fitTags}${assignedTag}</div>
+      <div class="card-tags">${warmTag}${modTag}${acctTag}${demoTag}${playlistTag}${fitTags}${assignedTag}${landedTag}</div>
     </div>`;
 }
 
@@ -110,6 +171,7 @@ function renderOrgCard(o) {
   const catTag = o.category ? `<span class="tag tag-category">${o.category}</span>` : '';
   const assignedTag = o.assigned_to && o.assigned_to !== currentUser ? `<span class="tag tag-assigned">${o.assigned_to}</span>` : '';
   const fitTags = (o.platform_fit || []).map(f => `<span class="tag tag-fit tag-fit-${f.toLowerCase()}">${f}</span>`).join('');
+  const landedTag = o.landed_by ? `<span class="tag tag-landed">${o.landed_by}</span>` : '';
   const dots = Array.from({ length: 5 }, (_, i) =>
     `<span class="dot${i < (o.musicRelevance || 0) ? ' filled' : ''}"></span>`
   ).join('');
@@ -118,7 +180,7 @@ function renderOrgCard(o) {
       ${badge}
       <div class="card-name">${o.name}</div>
       <div class="card-sub">${o.estPractitioners ? o.estPractitioners + ' practitioners' : ''}</div>
-      <div class="card-tags">${warmTag}${catTag}${fitTags}${assignedTag}</div>
+      <div class="card-tags">${warmTag}${catTag}${fitTags}${assignedTag}${landedTag}</div>
       <div class="relevance-dots">${dots}</div>
     </div>`;
 }
@@ -521,6 +583,7 @@ function renderPanelFields(item) {
   } else if (currentTab === 'practitioners') {
     const tierOpts = TIER_STAGES.map(t => `<option value="${t}"${t === (item.tier || 'Individual') ? ' selected' : ''}>${t}</option>`).join('');
     const assignedOpts = TEAM_MEMBERS.map(m => `<option value="${m}"${m === (item.assigned_to || '') ? ' selected' : ''}>${m}</option>`).join('');
+    const landedOpts = ['', ...TEAM_MEMBERS].map(m => `<option value="${m}"${m === (item.landed_by || '') ? ' selected' : ''}>${m || '—'}</option>`).join('');
     const fitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" class="pfit-cb" data-fit="${f}" ${(item.platform_fit || []).includes(f) ? 'checked' : ''} /> ${f}</label>`).join('');
     fields += `
       <div class="field-row">
@@ -533,6 +596,12 @@ function renderPanelFields(item) {
         <span class="field-label">Tier</span>
         <span class="field-value">
           <select class="field-inline-select" id="inlineTier">${tierOpts}</select>
+        </span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Landed By</span>
+        <span class="field-value">
+          <select class="field-inline-select" id="inlineLandedBy">${landedOpts}</select>
         </span>
       </div>
       <div class="field-row">
@@ -561,6 +630,7 @@ function renderPanelFields(item) {
     ).join('');
     const orgAssignedOpts = TEAM_MEMBERS.map(m => `<option value="${m}"${m === (item.assigned_to || '') ? ' selected' : ''}>${m}</option>`).join('');
     const orgTierOpts = TIER_STAGES.map(t => `<option value="${t}"${t === (item.tier || 'Organization') ? ' selected' : ''}>${t}</option>`).join('');
+    const orgLandedOpts = ['', ...TEAM_MEMBERS].map(m => `<option value="${m}"${m === (item.landed_by || '') ? ' selected' : ''}>${m || '—'}</option>`).join('');
     const orgFitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" class="pfit-cb" data-fit="${f}" ${(item.platform_fit || []).includes(f) ? 'checked' : ''} /> ${f}</label>`).join('');
     fields += `
       <div class="field-row">
@@ -573,6 +643,12 @@ function renderPanelFields(item) {
         <span class="field-label">Tier</span>
         <span class="field-value">
           <select class="field-inline-select" id="inlineTier">${orgTierOpts}</select>
+        </span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Landed By</span>
+        <span class="field-value">
+          <select class="field-inline-select" id="inlineLandedBy">${orgLandedOpts}</select>
         </span>
       </div>
       <div class="field-row">
@@ -674,6 +750,22 @@ function renderPanelFields(item) {
       });
       const idx = allData[currentTab].findIndex(d => d.id === activeId);
       if (idx !== -1) allData[currentTab][idx].tier = e.target.value;
+      renderMain();
+    });
+  }
+
+  // Landed By change
+  const landedSel = document.getElementById('inlineLandedBy');
+  if (landedSel) {
+    landedSel.addEventListener('change', async (e) => {
+      const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
+      await fetch(`/api/${endpoint}/${activeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ landed_by: e.target.value })
+      });
+      const idx = allData[currentTab].findIndex(d => d.id === activeId);
+      if (idx !== -1) allData[currentTab][idx].landed_by = e.target.value;
       renderMain();
     });
   }
@@ -995,6 +1087,7 @@ async function addLogEntry() {
   document.getElementById('logNote').value = '';
   setDefaultLogDate();
   if (activeId === targetId) renderLogEntries(allData[targetTab][idx]);
+  renderGoalsBar();
 }
 
 async function deleteLogEntry(logId) {
@@ -1365,6 +1458,16 @@ function bindGlobalEvents() {
   document.getElementById('modalOverlay').addEventListener('click', e => {
     if (e.target === document.getElementById('modalOverlay')) closeModalFn();
   });
+
+  // Theme toggle
+  const themeBtn = document.getElementById('themeToggle');
+  if (themeBtn) {
+    themeBtn.addEventListener('click', () => {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('sc_theme', currentTheme);
+      applyTheme();
+    });
+  }
 }
 
 function bindIdeaTooltips() {

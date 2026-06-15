@@ -12,6 +12,7 @@ const SENT_FILE = path.join(DATA_DIR, 'sent.json');
 const MARKETING_FILE = path.join(DATA_DIR, 'marketing.json');
 const TEAM_FILE = path.join(DATA_DIR, 'team.json');
 const IDEAS_FILE = path.join(DATA_DIR, 'ideas.json');
+const GOALS_FILE = path.join(DATA_DIR, 'goals.json');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -395,6 +396,19 @@ app.delete('/api/ideas/:id/log/:logId', (req, res) => {
   data[idx].log = data[idx].log.filter(e => String(e.id) !== req.params.logId);
   writeJSON(IDEAS_FILE, data);
   res.json({ ok: true });
+});
+
+// --- Goals ---
+
+app.get('/api/goals', (req, res) => {
+  res.json(readJSON(GOALS_FILE, { weekly_target: 15 }));
+});
+
+app.put('/api/goals', (req, res) => {
+  const current = readJSON(GOALS_FILE, { weekly_target: 15 });
+  const updated = { ...current, ...req.body };
+  writeJSON(GOALS_FILE, updated);
+  res.json(updated);
 });
 
 app.listen(PORT, () => {

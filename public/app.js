@@ -1,6 +1,6 @@
 // ===== State =====
 let currentTab = 'practitioners';
-let allData = { practitioners: [], organizations: [], sent: [], marketing: [], team: [], ideas: [] };
+let allData = { practitioners: [], organizations: [], ideas: [] };
 let activeId = null;
 let searchQuery = '';
 let filters = { status: '', category: '', priority: '', warmth: '' };
@@ -17,8 +17,6 @@ let currentTheme = localStorage.getItem('sc_theme') || 'dark';
 // ===== Pipeline Stages =====
 const PRACTITIONER_STAGES = ['Not Contacted', 'Contacted', 'Responded', 'Account Created', 'Demo Done', 'Onboarded', 'Affiliate'];
 const ORG_STAGES = ['Not Contacted', 'Contacted', 'Responded', 'Demo', 'Partner'];
-const MARKETING_STAGES = ['Prospect', 'Contacted', 'Responded', 'Interview', 'Decision'];
-const TEAM_STAGES = ['Prospect', 'Contacted', 'Interview', 'Decision', 'Hired'];
 const TIER_STAGES = ['Individual', 'Group Leader', 'Organization'];
 const PLATFORM_FIT_OPTIONS = ['SSB', 'Voice', 'Craft'];
 const IDEAS_STAGES = ['Brainstormed', 'Discussed', 'Executing', 'Completed'];
@@ -37,20 +35,14 @@ async function init() {
 }
 
 async function fetchAll() {
-  const [p, o, s, m, t, id, g] = await Promise.all([
+  const [p, o, id, g] = await Promise.all([
     fetch('/api/practitioners').then(r => r.json()).catch(() => []),
     fetch('/api/organizations').then(r => r.json()).catch(() => []),
-    fetch('/api/sent').then(r => r.json()).catch(() => []),
-    fetch('/api/marketing').then(r => r.json()).catch(() => []),
-    fetch('/api/team').then(r => r.json()).catch(() => []),
     fetch('/api/ideas').then(r => r.json()).catch(() => []),
     fetch('/api/goals').then(r => r.json()).catch(() => ({ weekly_target: 15 }))
   ]);
   allData.practitioners = p;
   allData.organizations = o;
-  allData.sent = s;
-  allData.marketing = m;
-  allData.team = t;
   allData.ideas = id;
   goals = g;
 }
@@ -112,13 +104,12 @@ function applyTheme() {
 // ===== Render Main =====
 function renderMain() {
   renderStats();
-  if (currentTab === 'sent') { renderSentTab(); return; }
   const data = getFilteredData();
   if (kanbanMode === 'tier' && (currentTab === 'practitioners' || currentTab === 'organizations')) {
     const html = `<div class="pipeline">${TIER_STAGES.map(t => renderColumn(t, data.filter(d => (d.tier || 'Individual') === t), 'tier')).join('')}</div>`;
     document.getElementById('mainContent').innerHTML = html;
   } else {
-    const stages = currentTab === 'practitioners' ? PRACTITIONER_STAGES : currentTab === 'marketing' ? MARKETING_STAGES : currentTab === 'team' ? TEAM_STAGES : currentTab === 'ideas' ? IDEAS_STAGES : ORG_STAGES;
+    const stages = currentTab === 'practitioners' ? PRACTITIONER_STAGES : currentTab === 'ideas' ? IDEAS_STAGES : ORG_STAGES;
     const html = `<div class="pipeline">${stages.map(s => renderColumn(s, data.filter(d => d.status === s), 'status')).join('')}</div>`;
     document.getElementById('mainContent').innerHTML = html;
   }
@@ -141,8 +132,6 @@ function renderColumn(stage, items, mode) {
 
 function renderCard(item) {
   if (currentTab === 'practitioners') return renderPractitionerCard(item);
-  if (currentTab === 'marketing') return renderMarketingCard(item);
-  if (currentTab === 'team') return renderTeamCard(item);
   if (currentTab === 'ideas') return renderIdeaCard(item);
   return renderOrgCard(item);
 }
@@ -156,11 +145,12 @@ function renderPractitionerCard(p) {
   const assignedTag = p.assigned_to && p.assigned_to !== currentUser ? `<span class="tag tag-assigned">${p.assigned_to}</span>` : '';
   const fitTags = (p.platform_fit || []).map(f => `<span class="tag tag-fit tag-fit-${f.toLowerCase()}">${f}</span>`).join('');
   const landedTag = p.landed_by ? `<span class="tag tag-landed">${p.landed_by}</span>` : '';
+  const channelTag = p.channel ? `<span class="tag tag-channel">${p.channel}</span>` : '';
   return `
     <div class="card" data-id="${p.id}" draggable="true">
       <div class="card-name">${p.name}</div>
       <div class="card-sub">${p.source || ''}</div>
-      <div class="card-tags">${warmTag}${modTag}${acctTag}${demoTag}${playlistTag}${fitTags}${assignedTag}${landedTag}</div>
+      <div class="card-tags">${warmTag}${modTag}${channelTag}${acctTag}${demoTag}${playlistTag}${fitTags}${assignedTag}${landedTag}</div>
     </div>`;
 }
 
@@ -172,6 +162,7 @@ function renderOrgCard(o) {
   const assignedTag = o.assigned_to && o.assigned_to !== currentUser ? `<span class="tag tag-assigned">${o.assigned_to}</span>` : '';
   const fitTags = (o.platform_fit || []).map(f => `<span class="tag tag-fit tag-fit-${f.toLowerCase()}">${f}</span>`).join('');
   const landedTag = o.landed_by ? `<span class="tag tag-landed">${o.landed_by}</span>` : '';
+  const channelTag = o.channel ? `<span class="tag tag-channel">${o.channel}</span>` : '';
   const dots = Array.from({ length: 5 }, (_, i) =>
     `<span class="dot${i < (o.musicRelevance || 0) ? ' filled' : ''}"></span>`
   ).join('');
@@ -180,31 +171,8 @@ function renderOrgCard(o) {
       ${badge}
       <div class="card-name">${o.name}</div>
       <div class="card-sub">${o.estPractitioners ? o.estPractitioners + ' practitioners' : ''}</div>
-      <div class="card-tags">${warmTag}${catTag}${fitTags}${assignedTag}${landedTag}</div>
+      <div class="card-tags">${warmTag}${catTag}${channelTag}${fitTags}${assignedTag}${landedTag}</div>
       <div class="relevance-dots">${dots}</div>
-    </div>`;
-}
-
-function renderTeamCard(t) {
-  const roleTag = t.role ? `<span class="tag tag-mrole">${t.role}</span>` : '';
-  const sourceTag = t.source ? `<span class="tag tag-modality">${t.source}</span>` : '';
-  return `
-    <div class="card" data-id="${t.id}" draggable="true">
-      <div class="card-name">${t.name}</div>
-      <div class="card-sub">${t.phone || t.email || ''}</div>
-      <div class="card-tags">${roleTag}${sourceTag}</div>
-    </div>`;
-}
-
-function renderMarketingCard(m) {
-  const roleTag = m.role ? `<span class="tag tag-mrole">${m.role}</span>` : '';
-  const fitTag = m.platformFit ? `<span class="tag tag-mfit">${m.platformFit}</span>` : '';
-  return `
-    <div class="card" data-id="${m.id}" draggable="true">
-      <div class="card-name">${m.name}</div>
-      <div class="card-sub">${m.focus || m.source || ''}</div>
-      <div class="card-sub" style="color:var(--sc-gold);font-size:11px">${m.rate || ''}</div>
-      <div class="card-tags">${roleTag}${fitTag}</div>
     </div>`;
 }
 
@@ -268,27 +236,6 @@ function renderFilterBar() {
     document.getElementById('fModality').addEventListener('change', e => { filters.category = e.target.value; renderMain(); });
     document.getElementById('fWarmth').addEventListener('change', e => { filters.warmth = e.target.value; renderMain(); });
     bindTeamViewControls();
-  } else if (currentTab === 'marketing') {
-    const statuses = ['', ...MARKETING_STAGES];
-    const roles = ['', ...getUnique('marketing', 'role')];
-    const fits = ['', 'SessionCraft', 'Voice', 'Sanctuary', 'All Platforms'];
-    bar.innerHTML = `
-      <select class="filter-select" id="fStatus"><option value="">All Stages</option>${statuses.slice(1).map(s => `<option value="${s}">${s}</option>`).join('')}</select>
-      <select class="filter-select" id="fRole"><option value="">All Roles</option>${roles.slice(1).map(r => `<option value="${r}">${r}</option>`).join('')}</select>
-      <select class="filter-select" id="fFit"><option value="">All Platforms</option>${fits.slice(1).map(f => `<option value="${f}">${f}</option>`).join('')}</select>
-    `;
-    document.getElementById('fStatus').addEventListener('change', e => { filters.status = e.target.value; renderMain(); });
-    document.getElementById('fRole').addEventListener('change', e => { filters.category = e.target.value; renderMain(); });
-    document.getElementById('fFit').addEventListener('change', e => { filters.warmth = e.target.value; renderMain(); });
-  } else if (currentTab === 'team') {
-    const statuses = ['', ...TEAM_STAGES];
-    const roles = ['', ...getUnique('team', 'role')];
-    bar.innerHTML = `
-      <select class="filter-select" id="fStatus"><option value="">All Stages</option>${statuses.slice(1).map(s => `<option value="${s}">${s}</option>`).join('')}</select>
-      <select class="filter-select" id="fRole"><option value="">All Roles</option>${roles.slice(1).map(r => `<option value="${r}">${r}</option>`).join('')}</select>
-    `;
-    document.getElementById('fStatus').addEventListener('change', e => { filters.status = e.target.value; renderMain(); });
-    document.getElementById('fRole').addEventListener('change', e => { filters.category = e.target.value; renderMain(); });
   } else if (currentTab === 'ideas') {
     bar.innerHTML = `
       <select class="filter-select" id="fStatus"><option value="">All Stages</option>${IDEAS_STAGES.map(s => `<option value="${s}">${s}</option>`).join('')}</select>
@@ -347,11 +294,8 @@ function getFilteredData() {
   if (filters.status) data = data.filter(d => d.status === filters.status);
   if (filters.category && currentTab === 'practitioners') data = data.filter(d => d.modality === filters.category);
   if (filters.category && currentTab === 'organizations') data = data.filter(d => d.category === filters.category);
-  if (filters.category && currentTab === 'marketing') data = data.filter(d => d.role === filters.category);
-  if (filters.category && currentTab === 'team') data = data.filter(d => d.role === filters.category);
   if (filters.priority) data = data.filter(d => d.priority === filters.priority);
-  if (filters.warmth && currentTab !== 'marketing' && currentTab !== 'ideas') data = data.filter(d => d.warmth === filters.warmth);
-  if (filters.warmth && currentTab === 'marketing') data = data.filter(d => d.platformFit === filters.warmth);
+  if (filters.warmth && currentTab !== 'ideas') data = data.filter(d => d.warmth === filters.warmth);
   if (filters.warmth && currentTab === 'ideas') data = data.filter(d => d.platform === filters.warmth);
   return data;
 }
@@ -359,26 +303,6 @@ function getFilteredData() {
 function renderStats() {
   const data = allData[currentTab];
   const total = data.length;
-  if (currentTab === 'marketing') {
-    const inPipeline = data.filter(d => d.status !== 'Prospect').length;
-    const interviewed = data.filter(d => d.status === 'Interview' || d.status === 'Decision').length;
-    document.getElementById('statsBar').innerHTML = `
-      <div class="stat-chip">Total: <span>${total}</span></div>
-      <div class="stat-chip">In Pipeline: <span>${inPipeline}</span></div>
-      <div class="stat-chip">Interviewed: <span>${interviewed}</span></div>
-    `;
-    return;
-  }
-  if (currentTab === 'team') {
-    const inPipeline = data.filter(d => d.status !== 'Prospect').length;
-    const hired = data.filter(d => d.status === 'Hired').length;
-    document.getElementById('statsBar').innerHTML = `
-      <div class="stat-chip">Total: <span>${total}</span></div>
-      <div class="stat-chip">In Pipeline: <span>${inPipeline}</span></div>
-      <div class="stat-chip">Hired: <span>${hired}</span></div>
-    `;
-    return;
-  }
   if (currentTab === 'ideas') {
     const active = data.filter(d => d.status !== 'Completed').length;
     const executing = data.filter(d => d.status === 'Executing').length;
@@ -427,169 +351,23 @@ function renderPanelMeta(item) {
       ${item.modality ? `<span class="tag tag-modality">${item.modality}</span>` : ''}
       <span style="color:var(--text-dim)">${item.source || ''}</span>
     `;
-  } else if (currentTab === 'marketing') {
-    meta.innerHTML = `
-      ${item.role ? `<span class="tag tag-mrole">${item.role}</span>` : ''}
-      ${item.platformFit ? `<span class="tag tag-mfit">${item.platformFit}</span>` : ''}
-      ${item.rate ? `<span style="color:var(--sc-gold);font-size:12px;font-weight:600">${item.rate}</span>` : ''}
-    `;
-  } else if (currentTab === 'team') {
-    meta.innerHTML = `
-      ${item.role ? `<span class="tag tag-mrole">${item.role}</span>` : ''}
-      ${item.source ? `<span class="tag tag-modality">${item.source}</span>` : ''}
-      ${item.availability ? `<span style="color:var(--text-dim);font-size:12px">${item.availability}</span>` : ''}
-    `;
-  } else if (currentTab === 'ideas') {
-    const platClass = (item.platform || 'general').toLowerCase().replace(/\s+/g, '-');
-    meta.innerHTML = `
-      ${item.platform ? `<span class="tag tag-fit tag-fit-${platClass}">${item.platform}</span>` : ''}
-      ${item.category ? `<span class="tag tag-category">${item.category}</span>` : ''}
-    `;
-  } else {
-    const pk = (item.priority || '').replace('+', 'p');
-    meta.innerHTML = `
-      <span class="priority-badge priority-${pk}" style="position:static;font-size:11px">${item.priority || ''}</span>
-      ${item.category ? `<span class="tag tag-category">${item.category}</span>` : ''}
-      ${item.warmConnection ? `<span class="tag tag-connection">Warm Connection</span>` : ''}
-    `;
-  }
-}
-
-function renderPanelFields(item) {
-  // Ideas tab — handled separately
-  if (currentTab === 'ideas') {
-    const ideaStatusOpts = IDEAS_STAGES.map(s => `<option value="${s}"${s === (item.status || 'Brainstormed') ? ' selected' : ''}>${s}</option>`).join('');
-    const platOpts = IDEAS_PLATFORMS.map(p => `<option value="${p}"${p === (item.platform || 'General') ? ' selected' : ''}>${p}</option>`).join('');
-    const catOpts = IDEAS_CATEGORIES.map(c => `<option value="${c}"${c === (item.category || '') ? ' selected' : ''}>${c}</option>`).join('');
-    let fields = `
-      <div class="field-row">
-        <span class="field-label">Status</span>
-        <select class="field-inline-select" id="inlineStatus">${ideaStatusOpts}</select>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Platform</span>
-        <select class="field-inline-select" id="inlinePlatform">${platOpts}</select>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Category</span>
-        <select class="field-inline-select" id="inlineCategory">${catOpts}</select>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Description</span>
-        <span class="field-value" style="white-space:pre-wrap;font-size:12px;color:var(--text-dim);line-height:1.5">${escHtml(item.description || '—')}</span>
-      </div>
-    `;
-    if (item.notes) fields += `<div class="field-note">${escHtml(item.notes)}</div>`;
-    fields += '<div class="panel-delete-action"><button class="btn-delete-record" id="btnDeleteRecord">Delete this idea</button></div>';
-    document.getElementById('panelFields').innerHTML = fields;
-
-    document.getElementById('inlineStatus').addEventListener('change', async (e) => {
-      await fetch(`/api/ideas/${activeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: e.target.value }) });
-      const idx = allData.ideas.findIndex(d => d.id === activeId);
-      if (idx !== -1) allData.ideas[idx].status = e.target.value;
-      renderMain();
-    });
-    document.getElementById('inlinePlatform').addEventListener('change', async (e) => {
-      await fetch(`/api/ideas/${activeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ platform: e.target.value }) });
-      const idx = allData.ideas.findIndex(d => d.id === activeId);
-      if (idx !== -1) { allData.ideas[idx].platform = e.target.value; renderPanelMeta(allData.ideas[idx]); renderMain(); }
-    });
-    document.getElementById('inlineCategory').addEventListener('change', async (e) => {
-      await fetch(`/api/ideas/${activeId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category: e.target.value }) });
-      const idx = allData.ideas.findIndex(d => d.id === activeId);
-      if (idx !== -1) { allData.ideas[idx].category = e.target.value; renderPanelMeta(allData.ideas[idx]); renderMain(); }
-    });
-    document.getElementById('btnDeleteRecord').addEventListener('click', async () => {
-      if (!confirm('Delete this idea?')) return;
-      await fetch('/api/ideas/' + item.id, { method: 'DELETE' });
-      allData.ideas = allData.ideas.filter(d => d.id !== item.id);
-      closePanel();
-      renderMain();
-    });
-    return;
-  }
-
-  const stages = currentTab === 'practitioners' ? PRACTITIONER_STAGES : currentTab === 'marketing' ? MARKETING_STAGES : currentTab === 'team' ? TEAM_STAGES : ORG_STAGES;
-  const stageOptions = stages.map(s => `<option value="${s}"${s === item.status ? ' selected' : ''}>${s}</option>`).join('');
-
-  let fields = `
-    <div class="field-row">
-      <span class="field-label">Status</span>
-      <select class="field-status-select" id="inlineStatus">${stageOptions}</select>
-    </div>
-    <div class="field-row">
-      <span class="field-label">Email</span>
-      <span class="field-value">${item.email ? `<a href="mailto:${item.email}">${item.email}</a>` : '—'}</span>
-    </div>
-  `;
-
-  if (currentTab === 'team') {
-    fields += `
-      <div class="field-row">
-        <span class="field-label">Phone</span>
-        <span class="field-value">${item.phone || '—'}</span>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Availability</span>
-        <span class="field-value">${item.availability || '—'}</span>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Rate</span>
-        <span class="field-value" style="color:var(--sc-gold)">${item.rate || '—'}</span>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Checkboxes</span>
-        <span class="field-value">
-          <div class="field-checkboxes">
-            <label class="check-item"><input type="checkbox" data-field="resumeReceived" ${item.resumeReceived ? 'checked' : ''} /> Resume Received</label>
-            <label class="check-item"><input type="checkbox" data-field="interviewDone" ${item.interviewDone ? 'checked' : ''} /> Interview Done</label>
-            <label class="check-item"><input type="checkbox" data-field="referenceChecked" ${item.referenceChecked ? 'checked' : ''} /> Reference Checked</label>
-            <label class="check-item"><input type="checkbox" data-field="offerSent" ${item.offerSent ? 'checked' : ''} /> Offer Sent</label>
-          </div>
-        </span>
-      </div>
-    `;
-  } else if (currentTab === 'marketing') {
-    fields += `
-      <div class="field-row">
-        <span class="field-label">Role / Type</span>
-        <span class="field-value">${item.role || '—'}</span>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Focus / Niche</span>
-        <span class="field-value">${item.focus || '—'}</span>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Platform Fit</span>
-        <span class="field-value">${item.platformFit || '—'}</span>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Rate</span>
-        <span class="field-value" style="color:var(--sc-gold)">${item.rate || '—'}</span>
-      </div>
-      <div class="field-row">
-        <span class="field-label">LinkedIn</span>
-        <span class="field-value">${item.linkedin ? `<a href="${item.linkedin}" target="_blank">${item.linkedin}</a>` : '—'}</span>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Website</span>
-        <span class="field-value">${item.website ? `<a href="${item.website}" target="_blank">${item.website}</a>` : '—'}</span>
-      </div>
-      <div class="field-row">
-        <span class="field-label">Source</span>
-        <span class="field-value">${item.source || '—'}</span>
-      </div>
-    `;
   } else if (currentTab === 'practitioners') {
     const tierOpts = TIER_STAGES.map(t => `<option value="${t}"${t === (item.tier || 'Individual') ? ' selected' : ''}>${t}</option>`).join('');
     const assignedOpts = TEAM_MEMBERS.map(m => `<option value="${m}"${m === (item.assigned_to || '') ? ' selected' : ''}>${m}</option>`).join('');
     const landedOpts = ['', ...TEAM_MEMBERS].map(m => `<option value="${m}"${m === (item.landed_by || '') ? ' selected' : ''}>${m || '—'}</option>`).join('');
+    const channelOpts = ['', 'Email', 'Instagram DM', 'LinkedIn', 'In Person', 'Other'].map(c => `<option value="${c}"${c === (item.channel || '') ? ' selected' : ''}>${c || '—'}</option>`).join('');
     const fitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" class="pfit-cb" data-fit="${f}" ${(item.platform_fit || []).includes(f) ? 'checked' : ''} /> ${f}</label>`).join('');
     fields += `
       <div class="field-row">
         <span class="field-label">Assigned To</span>
         <span class="field-value">
           <select class="field-inline-select" id="inlineAssigned">${assignedOpts}</select>
+        </span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Channel</span>
+        <span class="field-value">
+          <select class="field-inline-select" id="inlineChannel">${channelOpts}</select>
         </span>
       </div>
       <div class="field-row">
@@ -631,12 +409,19 @@ function renderPanelFields(item) {
     const orgAssignedOpts = TEAM_MEMBERS.map(m => `<option value="${m}"${m === (item.assigned_to || '') ? ' selected' : ''}>${m}</option>`).join('');
     const orgTierOpts = TIER_STAGES.map(t => `<option value="${t}"${t === (item.tier || 'Organization') ? ' selected' : ''}>${t}</option>`).join('');
     const orgLandedOpts = ['', ...TEAM_MEMBERS].map(m => `<option value="${m}"${m === (item.landed_by || '') ? ' selected' : ''}>${m || '—'}</option>`).join('');
+    const orgChannelOpts = ['', 'Email', 'Instagram DM', 'LinkedIn', 'In Person', 'Other'].map(c => `<option value="${c}"${c === (item.channel || '') ? ' selected' : ''}>${c || '—'}</option>`).join('');
     const orgFitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" class="pfit-cb" data-fit="${f}" ${(item.platform_fit || []).includes(f) ? 'checked' : ''} /> ${f}</label>`).join('');
     fields += `
       <div class="field-row">
         <span class="field-label">Assigned To</span>
         <span class="field-value">
           <select class="field-inline-select" id="inlineAssigned">${orgAssignedOpts}</select>
+        </span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Channel</span>
+        <span class="field-value">
+          <select class="field-inline-select" id="inlineChannel">${orgChannelOpts}</select>
         </span>
       </div>
       <div class="field-row">
@@ -691,10 +476,9 @@ function renderPanelFields(item) {
   }
 
   // Log Email quick-action
-  fields += '<div class="log-email-action"><button class="btn-log-email" id="btnLogEmail">Log Email Sent</button></div>';
 
   // Delete button
-  const deleteLabel = currentTab === 'practitioners' ? 'practitioner' : currentTab === 'marketing' ? 'candidate' : 'organization';
+  const deleteLabel = currentTab === 'practitioners' ? 'practitioner' : 'organization';
   fields += '<div class="panel-delete-action"><button class="btn-delete-record" id="btnDeleteRecord">Delete this ' + deleteLabel + '</button></div>';
 
   // Contacts section for orgs
@@ -711,7 +495,7 @@ function renderPanelFields(item) {
 
   // Status change
   document.getElementById('inlineStatus').addEventListener('change', async (e) => {
-    const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : 'organizations';
+    const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
     await fetch(`/api/${endpoint}/${activeId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -754,6 +538,22 @@ function renderPanelFields(item) {
     });
   }
 
+  // Channel change
+  const channelSel = document.getElementById('inlineChannel');
+  if (channelSel) {
+    channelSel.addEventListener('change', async (e) => {
+      const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
+      await fetch(`/api/${endpoint}/${activeId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ channel: e.target.value })
+      });
+      const idx = allData[currentTab].findIndex(d => d.id === activeId);
+      if (idx !== -1) allData[currentTab][idx].channel = e.target.value;
+      renderMain();
+    });
+  }
+
   // Landed By change
   const landedSel = document.getElementById('inlineLandedBy');
   if (landedSel) {
@@ -786,19 +586,13 @@ function renderPanelFields(item) {
     });
   });
 
-  // Log Email button
-  const logEmailBtn = document.getElementById('btnLogEmail');
-  if (logEmailBtn) {
-    logEmailBtn.addEventListener('click', () => openLogEmailFromPanel(item));
-  }
-
   // Delete record button
   const deleteBtn = document.getElementById('btnDeleteRecord');
   if (deleteBtn) {
     deleteBtn.addEventListener('click', async () => {
-      const label = currentTab === 'practitioners' ? 'practitioner' : currentTab === 'marketing' ? 'company' : currentTab === 'team' ? 'candidate' : 'organization';
+      const label = currentTab === 'practitioners' ? 'practitioner' : 'organization';
       if (!confirm('Delete ' + item.name + '? This cannot be undone.')) return;
-      const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : 'organizations';
+      const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
       await fetch('/api/' + endpoint + '/' + item.id, { method: 'DELETE' });
       allData[currentTab] = allData[currentTab].filter(d => d.id !== item.id);
       closePanel();
@@ -811,7 +605,7 @@ function renderPanelFields(item) {
     cb.addEventListener('change', async (e) => {
       const field = e.target.dataset.field;
       const val = e.target.checked;
-      const cbEndpoint = currentTab === 'team' ? 'team' : 'practitioners';
+      const cbEndpoint = 'practitioners';
       await fetch(`/api/${cbEndpoint}/${activeId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1073,7 +867,7 @@ async function addLogEntry() {
   const note = document.getElementById('logNote').value.trim();
   if (!note) return;
   const date = document.getElementById('logDate').value || today();
-  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : currentTab === 'ideas' ? 'ideas' : 'organizations';
+  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'ideas' ? 'ideas' : 'organizations';
   const targetId = activeId;
   const targetTab = currentTab;
   const entry = await fetch(`/api/${endpoint}/${targetId}/log`, {
@@ -1091,7 +885,7 @@ async function addLogEntry() {
 }
 
 async function deleteLogEntry(logId) {
-  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : currentTab === 'ideas' ? 'ideas' : 'organizations';
+  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'ideas' ? 'ideas' : 'organizations';
   const targetId = activeId;
   const targetTab = currentTab;
   await fetch(`/api/${endpoint}/${targetId}/log/${logId}`, { method: 'DELETE' });
@@ -1110,17 +904,10 @@ function closePanel() {
 
 // ===== Add Modal =====
 function openAddModal() {
-  const titles = { practitioners: 'Add Practitioner', organizations: 'Add Organization', sent: 'Log Email', marketing: 'Add Company', team: 'Add Candidate', ideas: 'New Idea' };
+  const titles = { practitioners: 'Add Practitioner', organizations: 'Add Organization', ideas: 'New Idea' };
   document.getElementById('modalTitle').textContent = titles[currentTab] || 'Add';
-  if (currentTab === 'sent') {
-    document.getElementById('modalBody').innerHTML = sentForm();
-    document.getElementById('modalOverlay').classList.add('active');
-    return;
-  }
   let formHtml;
   if (currentTab === 'practitioners') formHtml = practitionerForm();
-  else if (currentTab === 'marketing') formHtml = marketingForm();
-  else if (currentTab === 'team') formHtml = teamForm();
   else if (currentTab === 'ideas') formHtml = ideaForm();
   else formHtml = orgForm();
   document.getElementById('modalBody').innerHTML = formHtml;
@@ -1154,8 +941,14 @@ function practitionerForm(data = {}) {
     </div>
     <div class="form-row">
       <div class="form-group"><label>Assigned To</label><select class="form-select" id="fAssigned">${assignedOptions}</select></div>
-      <div class="form-group"><label>Tier</label><select class="form-select" id="fTier">${tierOptions}</select></div>
+      <div class="form-group"><label>Channel</label>
+        <select class="form-select" id="fChannel">
+          <option value="">—</option>
+          ${['Email','Instagram DM','LinkedIn','In Person','Other'].map(c => `<option value="${c}"${data.channel === c ? ' selected' : ''}>${c}</option>`).join('')}
+        </select>
+      </div>
     </div>
+    <div class="form-group"><label>Tier</label><select class="form-select" id="fTier">${tierOptions}</select></div>
     <div class="form-group"><label>Platform Fit</label><div class="field-checkboxes" style="padding:4px 0">${fitChecks}</div></div>
     <div class="form-group"><label>Offering</label><input class="form-input" id="fOffering" value="${data.offering || ''}" /></div>
     <div class="form-group"><label>Notes</label><textarea class="form-textarea" id="fNotes" rows="3">${data.notes || ''}</textarea></div>
@@ -1183,7 +976,16 @@ function orgForm(data = {}) {
     </div>
     <div class="form-row">
       <div class="form-group"><label>Assigned To</label><select class="form-select" id="fAssigned">${assignedOptions}</select></div>
-      <div class="form-group"><label>Tier</label><select class="form-select" id="fTier">${tierOptions}</select></div>
+      <div class="form-group"><label>Channel</label>
+        <select class="form-select" id="fChannel">
+          <option value="">—</option>
+          ${['Email','Instagram DM','LinkedIn','In Person','Other'].map(c => `<option value="${c}"${data.channel === c ? ' selected' : ''}>${c}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label>Tier</label><select class="form-select" id="fTier">${tierOptions}</select></div>
+    <div class="form-row">
+      <div class="form-group"><label>Channel</label><select class="form-select" id="fChannel"><option value="">—</option><option value="Email"${data.channel==="Email"?" selected":""}>Email</option><option value="Instagram DM"${data.channel==="Instagram DM"?" selected":""}>Instagram DM</option><option value="LinkedIn"${data.channel==="LinkedIn"?" selected":""}>LinkedIn</option><option value="In Person"${data.channel==="In Person"?" selected":""}>In Person</option><option value="Other"${data.channel==="Other"?" selected":""}>Other</option></select></div>
     </div>
     <div class="form-group"><label>Platform Fit</label><div class="field-checkboxes" style="padding:4px 0">${fitChecks}</div></div>
     <div class="form-row">
@@ -1201,59 +1003,6 @@ function orgForm(data = {}) {
     <div class="form-group"><label>Why Target</label><textarea class="form-textarea" id="fWhyTarget" rows="2">${data.whyTarget || ''}</textarea></div>
     <div class="form-group"><label>Notes</label><textarea class="form-textarea" id="fNotes" rows="2">${data.notes || ''}</textarea></div>
     <div class="form-group"><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="fWarm" ${data.warmConnection ? 'checked' : ''} /> Warm Connection</label></div>
-  `;
-}
-
-function teamForm(data = {}) {
-  const statusOptions = TEAM_STAGES.map(s => `<option value="${s}"${s === (data.status || 'Prospect') ? ' selected' : ''}>${s}</option>`).join('');
-  return `
-    <div class="form-row">
-      <div class="form-group"><label>Name *</label><input class="form-input" id="fName" value="${data.name || ''}" /></div>
-      <div class="form-group"><label>Role</label><input class="form-input" id="fRole" placeholder="Outreach Coordinator, VA, Marketing..." value="${data.role || ''}" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Phone</label><input class="form-input" id="fPhone" value="${data.phone || ''}" /></div>
-      <div class="form-group"><label>Email</label><input class="form-input" id="fEmail" value="${data.email || ''}" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Source</label><input class="form-input" id="fSource" placeholder="Dr. Joe Group, referral, LinkedIn..." value="${data.source || ''}" /></div>
-      <div class="form-group"><label>Availability</label><input class="form-input" id="fAvailability" placeholder="10h/week, Part-time..." value="${data.availability || ''}" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Rate</label><input class="form-input" id="fRate" placeholder="$28-40 CAD/hr" value="${data.rate || ''}" /></div>
-      <div class="form-group"><label>Status</label><select class="form-select" id="fStatus">${statusOptions}</select></div>
-    </div>
-    <div class="form-group"><label>Notes</label><textarea class="form-textarea" id="fNotes" rows="3">${data.notes || ''}</textarea></div>
-  `;
-}
-
-function marketingForm(data = {}) {
-  const statusOptions = MARKETING_STAGES.map(s => `<option value="${s}"${s === (data.status || 'Prospect') ? ' selected' : ''}>${s}</option>`).join('');
-  const fitOptions = ['', 'SessionCraft', 'Voice', 'Sanctuary', 'All Platforms'].map(f =>
-    `<option value="${f}"${f === (data.platformFit || '') ? ' selected' : ''}>${f || '—'}</option>`
-  ).join('');
-  return `
-    <div class="form-row">
-      <div class="form-group"><label>Name *</label><input class="form-input" id="fName" value="${data.name || ''}" /></div>
-      <div class="form-group"><label>Role / Type</label><input class="form-input" id="fRole" placeholder="Niche Marketer, VA, Fractional CMO" value="${data.role || ''}" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Focus / Niche</label><input class="form-input" id="fFocus" placeholder="Hay House, wellness apps, meditation..." value="${data.focus || ''}" /></div>
-      <div class="form-group"><label>Source</label><input class="form-input" id="fSource" placeholder="LinkedIn, referral, Tristan..." value="${data.source || ''}" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Email</label><input class="form-input" id="fEmail" value="${data.email || ''}" /></div>
-      <div class="form-group"><label>Rate / Budget</label><input class="form-input" id="fRate" placeholder="$2,500–4,000/mo" value="${data.rate || ''}" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>LinkedIn</label><input class="form-input" id="fLinkedin" value="${data.linkedin || ''}" /></div>
-      <div class="form-group"><label>Website</label><input class="form-input" id="fWebsite" value="${data.website || ''}" /></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label>Status</label><select class="form-select" id="fStatus">${statusOptions}</select></div>
-      <div class="form-group"><label>Platform Fit</label><select class="form-select" id="fFit">${fitOptions}</select></div>
-    </div>
-    <div class="form-group"><label>Notes</label><textarea class="form-textarea" id="fNotes" rows="3">${data.notes || ''}</textarea></div>
   `;
 }
 
@@ -1313,21 +1062,6 @@ async function saveModal() {
       notes: document.getElementById('fNotes').value.trim(),
       log: []
     };
-  } else if (currentTab === 'marketing') {
-    payload = {
-      name,
-      role: document.getElementById('fRole').value.trim(),
-      focus: document.getElementById('fFocus').value.trim(),
-      source: document.getElementById('fSource').value.trim(),
-      email: document.getElementById('fEmail').value.trim(),
-      rate: document.getElementById('fRate').value.trim(),
-      linkedin: document.getElementById('fLinkedin').value.trim(),
-      website: document.getElementById('fWebsite').value.trim(),
-      status: document.getElementById('fStatus').value,
-      platformFit: document.getElementById('fFit').value,
-      notes: document.getElementById('fNotes').value.trim(),
-      log: []
-    };
   } else if (currentTab === 'practitioners') {
     const fitSelected = Array.from(document.querySelectorAll('input[name="fPlatformFit"]:checked')).map(c => c.value);
     payload = {
@@ -1340,6 +1074,7 @@ async function saveModal() {
       assigned_to: document.getElementById('fAssigned').value,
       tier: document.getElementById('fTier').value,
       platform_fit: fitSelected,
+      channel: document.getElementById('fChannel') ? document.getElementById('fChannel').value : '',
       offering: document.getElementById('fOffering').value.trim(),
       notes: document.getElementById('fNotes').value.trim(),
       accountCreated: false, demo: false, followUp: false, log: []
@@ -1362,12 +1097,13 @@ async function saveModal() {
       musicRelevance: parseInt(document.getElementById('fRelevance').value) || 0,
       whyTarget: document.getElementById('fWhyTarget').value.trim(),
       notes: document.getElementById('fNotes').value.trim(),
+      channel: document.getElementById('fChannel') ? document.getElementById('fChannel').value : '',
       warmConnection: document.getElementById('fWarm').checked,
       log: []
     };
   }
 
-  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : 'organizations';
+  const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
   const res = await fetch(`/api/${endpoint}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1419,7 +1155,7 @@ function bindGlobalEvents() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       currentTab = btn.dataset.tab;
-      const addLabels = { sent: '+ Log Email', marketing: '+ Add Company', team: '+ Add Candidate', ideas: '+ New Idea' };
+      const addLabels = { ideas: '+ New Idea' };
       document.getElementById('btnAdd').textContent = addLabels[currentTab] || '+ Add';
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -1454,7 +1190,6 @@ function bindGlobalEvents() {
   document.getElementById('btnModalCancel').addEventListener('click', closeModalFn);
   document.getElementById('btnModalSave').addEventListener('click', () => {
     if (modalSaveAction) { modalSaveAction(); return; }
-    if (currentTab === 'sent') { saveSentEntry(); return; }
     saveModal();
   });
   document.getElementById('modalOverlay').addEventListener('click', e => {
@@ -1571,7 +1306,7 @@ document.addEventListener('drop', async e => {
   const colMode = col.dataset.mode || 'status';
   draggedId = null;
   if (!id || !newStage) return;
-  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'marketing' ? 'marketing' : currentTab === 'team' ? 'team' : currentTab === 'ideas' ? 'ideas' : 'organizations';
+  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'ideas' ? 'ideas' : 'organizations';
   const updateField = colMode === 'tier' ? 'tier' : 'status';
   await fetch(`/api/${endpoint}/${id}`, {
     method: 'PUT',
@@ -1583,124 +1318,6 @@ document.addEventListener('drop', async e => {
   renderMain();
 })
 
-
-// ===== Quick Log Email from Panel =====
-function openLogEmailFromPanel(item) {
-  const titles = { practitioners: 'Add Practitioner', organizations: 'Add Organization', sent: 'Log Email' };
-  document.getElementById('modalTitle').textContent = 'Log Email';
-  document.getElementById('modalBody').innerHTML = sentForm();
-  document.getElementById('modalOverlay').classList.add('active');
-
-  // Pre-fill fields
-  document.getElementById('sentTo').value = item.name || '';
-  document.getElementById('sentDate').value = today();
-
-  // Set save action for panel log mode
-  modalSaveAction = async () => {
-    const entry = {
-      date: document.getElementById('sentDate').value,
-      subject: document.getElementById('sentSubject').value.trim(),
-      to: document.getElementById('sentTo').value.trim(),
-      type: document.getElementById('sentType').value,
-      sentFrom: document.getElementById('sentFromField').value,
-      via: document.getElementById('sentVia').value,
-      notes: document.getElementById('sentNotes').value.trim()
-    };
-    if (!entry.subject && !entry.to) return;
-
-    // Save to sent
-    const res = await fetch('/api/sent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(entry)
-    }).then(r => r.json());
-    allData.sent.unshift(res);
-
-    // Auto-bump status from "Not Contacted" to "Contacted" if applicable
-    if (item.status === 'Not Contacted') {
-      const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
-      await fetch('/api/' + endpoint + '/' + item.id, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'Contacted' })
-      });
-      const idx = allData[currentTab].findIndex(d => d.id === item.id);
-      if (idx !== -1) allData[currentTab][idx].status = 'Contacted';
-    }
-
-    closeModalFn();
-    // Refresh the panel with updated data
-    const updatedItem = allData[currentTab].find(d => d.id === item.id);
-    if (updatedItem && activeId === item.id) {
-      renderPanelFields(updatedItem);
-      renderLogEntries(updatedItem);
-    }
-    renderMain();
-  };
-}
-
-// ===== Sent Tab =====
-const SENT_TYPES = ['Individual', 'Group', 'Broadcast'];
-const SENT_FROM_OPTIONS = ['SessionCraft', 'Craig Young Music'];
-const SENT_VIA_OPTIONS = ['Gmail', 'Kit'];
-
-function renderSentTab() {
-  const sent = allData.sent || [];
-  const filtered = sent.filter(s => {
-    if (searchQuery && !JSON.stringify(s).toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
-
-  const statsHtml = '<div class="stat-chip">Total Sent: <span>' + sent.length + '</span></div>' +
-    '<div class="stat-chip">This Week: <span>' + sent.filter(s => isThisWeek(s.date)).length + '</span></div>' +
-    '<div class="stat-chip">Individual: <span>' + sent.filter(s => s.type === 'Individual').length + '</span></div>' +
-    '<div class="stat-chip">Group/Broadcast: <span>' + sent.filter(s => s.type !== 'Individual').length + '</span></div>';
-  document.getElementById('statsBar').innerHTML = statsHtml;
-
-  if (!filtered.length) {
-    document.getElementById('mainContent').innerHTML = '<div class="sent-empty"><p>No emails logged yet.</p><p>Send one, then log it here.</p></div>';
-    return;
-  }
-
-  const rows = filtered.map(s => {
-    const typeClass = (s.type || 'Individual').toLowerCase();
-    return '<tr class="sent-row" data-id="' + s.id + '">' +
-      '<td class="sent-date">' + (s.date || '') + '</td>' +
-      '<td class="sent-subject">' + escHtml(s.subject || '') + '</td>' +
-      '<td class="sent-to">' + escHtml(s.to || '') + '</td>' +
-      '<td><span class="sent-type-badge sent-type-' + typeClass + '">' + (s.type || '') + '</span></td>' +
-      '<td class="sent-from-cell">' + escHtml(s.sentFrom || '') + '</td>' +
-      '<td class="sent-via-cell">' + escHtml(s.via || '') + '</td>' +
-      '<td class="sent-notes-cell" title="' + escHtml(s.notes || '') + '">' + escHtml((s.notes || '').slice(0, 40)) + ((s.notes||'').length > 40 ? '...' : '') + '</td>' +
-      '<td><button class="sent-delete-btn" data-id="' + s.id + '" title="Delete">&#10005;</button></td>' +
-      '</tr>';
-  }).join('');
-
-  document.getElementById('mainContent').innerHTML =
-    '<div class="sent-table-wrap"><table class="sent-table"><thead><tr>' +
-    '<th>Date</th><th>Subject</th><th>To</th><th>Type</th><th>From</th><th>Via</th><th>Notes</th><th></th>' +
-    '</tr></thead><tbody>' + rows + '</tbody></table></div>';
-
-  document.querySelectorAll('.sent-delete-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      if (!confirm('Delete this entry?')) return;
-      await fetch('/api/sent/' + btn.dataset.id, { method: 'DELETE' });
-      allData.sent = allData.sent.filter(s => s.id !== btn.dataset.id);
-      renderMain();
-    });
-  });
-
-  // Click row to edit
-  document.querySelectorAll('.sent-row').forEach(row => {
-    row.addEventListener('click', (e) => {
-      if (e.target.closest('.sent-delete-btn')) return;
-      const item = allData.sent.find(s => s.id === row.dataset.id);
-      if (item) openEditSent(item);
-    });
-  });
-}
-
 function isThisWeek(dateStr) {
   if (!dateStr) return false;
   const d = new Date(dateStr + 'T00:00:00');
@@ -1709,78 +1326,6 @@ function isThisWeek(dateStr) {
   startOfWeek.setDate(now.getDate() - now.getDay());
   startOfWeek.setHours(0,0,0,0);
   return d >= startOfWeek;
-}
-
-function sentForm() {
-  const typeOpts = SENT_TYPES.map(t => '<option value="' + t + '">' + t + '</option>').join('');
-  const fromOpts = SENT_FROM_OPTIONS.map(f => '<option value="' + f + '">' + f + '</option>').join('');
-  const viaOpts = SENT_VIA_OPTIONS.map(v => '<option value="' + v + '">' + v + '</option>').join('');
-  return '<div class="form-row"><label>Date</label><input type="date" id="sentDate" value="' + today() + '" /></div>' +
-    '<div class="form-row"><label>Subject</label><input type="text" id="sentSubject" placeholder="Email subject line..." /></div>' +
-    '<div class="form-row"><label>To</label><input type="text" id="sentTo" placeholder="Name, org, or group..." /></div>' +
-    '<div class="form-row"><label>Type</label><select id="sentType">' + typeOpts + '</select></div>' +
-    '<div class="form-row"><label>Sent From</label><select id="sentFromField">' + fromOpts + '</select></div>' +
-    '<div class="form-row"><label>Via</label><select id="sentVia">' + viaOpts + '</select></div>' +
-    '<div class="form-row"><label>Notes</label><textarea id="sentNotes" rows="2" placeholder="Optional context..."></textarea></div>';
-}
-
-async function saveSentEntry() {
-  const entry = {
-    date: document.getElementById('sentDate').value,
-    subject: document.getElementById('sentSubject').value.trim(),
-    to: document.getElementById('sentTo').value.trim(),
-    type: document.getElementById('sentType').value,
-    sentFrom: document.getElementById('sentFromField').value,
-    via: document.getElementById('sentVia').value,
-    notes: document.getElementById('sentNotes').value.trim()
-  };
-  if (!entry.subject && !entry.to) return;
-  const res = await fetch('/api/sent', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(entry)
-  }).then(r => r.json());
-  allData.sent.unshift(res);
-  closeModalFn();
-  renderMain();
-}
-
-// ===== Edit Sent Entry =====
-function openEditSent(item) {
-  document.getElementById('modalTitle').textContent = 'Edit Email';
-  document.getElementById('modalBody').innerHTML = sentForm();
-  document.getElementById('modalOverlay').classList.add('active');
-
-  // Fill in existing values
-  document.getElementById('sentDate').value = item.date || '';
-  document.getElementById('sentSubject').value = item.subject || '';
-  document.getElementById('sentTo').value = item.to || '';
-  document.getElementById('sentType').value = item.type || 'Individual';
-  document.getElementById('sentFromField').value = item.sentFrom || 'SessionCraft';
-  document.getElementById('sentVia').value = item.via || 'Gmail';
-  document.getElementById('sentNotes').value = item.notes || '';
-
-  // Set save action for edit mode
-  modalSaveAction = async () => {
-    const updated = {
-      date: document.getElementById('sentDate').value,
-      subject: document.getElementById('sentSubject').value.trim(),
-      to: document.getElementById('sentTo').value.trim(),
-      type: document.getElementById('sentType').value,
-      sentFrom: document.getElementById('sentFromField').value,
-      via: document.getElementById('sentVia').value,
-      notes: document.getElementById('sentNotes').value.trim()
-    };
-    await fetch('/api/sent/' + item.id, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updated)
-    });
-    const idx = allData.sent.findIndex(s => s.id === item.id);
-    if (idx !== -1) Object.assign(allData.sent[idx], updated);
-    closeModalFn();
-    renderMain();
-  };
 }
 
 // ===== Go =====

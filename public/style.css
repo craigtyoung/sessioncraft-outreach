@@ -2,9 +2,9 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --sc-gold: #C9A84C;
-  --sc-gold-light: #E8CC7A;
-  --sc-gold-dim: rgba(201,168,76,0.15);
+  --sc-gold: #dde196;
+  --sc-gold-light: #eef0b8;
+  --sc-gold-dim: rgba(221,225,150,0.15);
   --bg: #0E0E10;
   --bg2: #16161A;
   --bg3: #1E1E24;
@@ -186,10 +186,10 @@ main {
 .tag-cool { background: rgba(100,181,246,0.15); color: var(--cool); }
 .tag-demo { background: rgba(102,187,106,0.15); color: var(--green); }
 .tag-account { background: rgba(102,187,106,0.15); color: var(--green); }
-.tag-connection { background: rgba(201,168,76,0.15); color: var(--sc-gold); }
+.tag-connection { background: rgba(221,225,150,0.15); color: var(--sc-gold); }
 .tag-playlist { background: rgba(171,71,188,0.15); color: #CE93D8; }
 .tag-mrole { background: rgba(129,199,132,0.15); color: #81C784; }
-.tag-mfit { background: rgba(201,168,76,0.12); color: var(--sc-gold); }
+.tag-mfit { background: rgba(221,225,150,0.12); color: var(--sc-gold); }
 .tab-btn-marketing { border-left: 1px solid var(--border); margin-left: 4px; }
 
 .priority-badge {
@@ -201,7 +201,7 @@ main {
   padding: 2px 6px;
   border-radius: 4px;
 }
-.priority-Ap { background: rgba(201,168,76,0.2); color: var(--sc-gold); }
+.priority-Ap { background: rgba(221,225,150,0.2); color: var(--sc-gold); }
 .priority-A  { background: rgba(102,187,106,0.15); color: var(--green); }
 .priority-Bp { background: rgba(100,181,246,0.15); color: var(--cool); }
 .priority-B  { background: rgba(136,136,136,0.15); color: var(--text-muted); }
@@ -376,7 +376,7 @@ main {
 /* ===== Buttons ===== */
 .btn-primary {
   background: var(--sc-gold);
-  color: #000;
+  color: #1a1a1a;
   border: none;
   border-radius: 8px;
   padding: 8px 16px;
@@ -527,7 +527,7 @@ main {
   cursor: pointer; transition: all 0.15s; white-space: nowrap;
 }
 .filter-toggle:hover { border-color: var(--sc-gold); color: var(--text); }
-.filter-toggle.active { background: rgba(201,168,76,0.12); border-color: var(--sc-gold); color: var(--sc-gold); font-weight: 600; }
+.filter-toggle.active { background: rgba(221,225,150,0.12); border-color: var(--sc-gold); color: var(--sc-gold); font-weight: 600; }
 
 /* ===== Inline Select (panel fields) ===== */
 .field-inline-select {
@@ -551,7 +551,7 @@ main {
   position: fixed;
   z-index: 9999;
   background: var(--bg3);
-  border: 1px solid rgba(201,168,76,0.4);
+  border: 1px solid rgba(221,225,150,0.4);
   border-radius: 8px;
   padding: 10px 13px;
   max-width: 260px;
@@ -642,7 +642,10 @@ main {
 .goals-input:focus { border-color: var(--sc-gold); }
 
 /* ===== Landed Tag ===== */
-.tag-landed { background: rgba(201,168,76,0.18); color: var(--sc-gold); border: 1px solid rgba(201,168,76,0.35); }
+.tag-landed { background: rgba(221,225,150,0.18); color: var(--sc-gold); border: 1px solid rgba(221,225,150,0.35); }
+
+/* ===== Channel Tag ===== */
+.tag-channel { background: rgba(100,181,246,0.12); color: var(--cool); border: 1px solid rgba(100,181,246,0.25); }
 
 /* ===== Theme Toggle ===== */
 .theme-toggle {

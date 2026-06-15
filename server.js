@@ -52,7 +52,9 @@ function readJSON(filePath, defaultValue = []) {
 }
 
 function writeJSON(filePath, data) {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+  // Non-blocking — never stall the response waiting on NFS/volume
+  fs.promises.writeFile(filePath, JSON.stringify(data, null, 2))
+    .catch(err => console.error('Write error:', path.basename(filePath), err.message));
 }
 
 function postHandler(file, buildEntry) {
@@ -65,7 +67,7 @@ function postHandler(file, buildEntry) {
       res.json(entry);
     } catch (err) {
       console.error('POST error:', err);
-      res.status(500).json({ error: err.message });
+      if (!res.headersSent) res.status(500).json({ error: err.message });
     }
   };
 }

@@ -1049,19 +1049,6 @@ async function saveModal() {
     renderFilterBar();
     renderMain();
     return;
-  } else if (currentTab === 'team') {
-    payload = {
-      name,
-      role: document.getElementById('fRole').value.trim(),
-      phone: document.getElementById('fPhone').value.trim(),
-      email: document.getElementById('fEmail').value.trim(),
-      source: document.getElementById('fSource').value.trim(),
-      availability: document.getElementById('fAvailability').value.trim(),
-      rate: document.getElementById('fRate').value.trim(),
-      status: document.getElementById('fStatus').value,
-      notes: document.getElementById('fNotes').value.trim(),
-      log: []
-    };
   } else if (currentTab === 'practitioners') {
     const fitSelected = Array.from(document.querySelectorAll('input[name="fPlatformFit"]:checked')).map(c => c.value);
     payload = {

@@ -8,7 +8,7 @@
     "source": "Dr. Joe Group",
     "availability": "",
     "rate": "",
-    "status": "Decision",
+    "status": "Hired",
     "notes": "Strong phone interview May 8. Pre-existing relationship � mutual respect, shared Dispenza world. Agreed to start next week in coordinator role. Rate TBD (sending position description range). Both see a bigger role: team manager, affiliate coordinator, spokesperson. Skills: communications, team management, software dev, AI, PR, creative thinking. Resonates with SessionCraft, Voice, and Sacred Sanctuary.",
     "log": [
       {
@@ -36,7 +36,7 @@
     "source": "Dr. Joe Group",
     "availability": "",
     "rate": "",
-    "status": "Contacted",
+    "status": "Hired",
     "notes": "Reached out via WhatsApp from Business & Health Professionals - DJD group. Said position sounds cool, wants to learn more.",
     "log": [
       {
@@ -54,18 +54,5 @@
         "createdAt": "2026-05-08T18:39:17.620Z"
       }
     ]
-  },
-  {
-    "id": "t1778351071278",
-    "log": [],
-    "name": "Christine Grauer",
-    "role": "Admin Coordinator candidate",
-    "email": "c_grauer@yahoo.ca",
-    "phone": "",
-    "source": "SessionCraft job posting",
-    "availability": "",
-    "rate": "$28-40 CAD/hr",
-    "status": "Prospect",
-    "notes": "Coaching business (low revenue), 17-year medical sales team organizer, yoga instructor. Great intro call May 9. Very inspired by the vision. Invited to explore SessionCraft yoga modality � will upgrade to premium once she creates an account (she will WhatsApp). Mid-to-late 50s, strong team leadership background."
   }
 ]

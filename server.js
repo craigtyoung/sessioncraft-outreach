@@ -25,6 +25,10 @@ const GOALS_FILE = path.join(DATA_DIR, 'goals.json');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use((req, res, next) => {
+  if (req.method !== 'GET') console.log(`${req.method} ${req.url} body:`, JSON.stringify(req.body).slice(0, 80));
+  next();
+});
 
 // On first boot with a volume, copy seed data if files don't exist yet
 const SEED_DIR = path.join(__dirname, 'seeds');

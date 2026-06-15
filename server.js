@@ -43,16 +43,30 @@ try {
   console.error('Startup seed error (non-fatal):', err.message);
 }
 
-function readJSON(filePath, defaultValue = []) {
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-  } catch {
-    return defaultValue;
-  }
+// In-memory cache — eliminates per-request NFS I/O entirely
+const cache = {};
+const DEFAULTS = {
+  [PRACTITIONERS_FILE]: [],
+  [ORGANIZATIONS_FILE]: [],
+  [SENT_FILE]: [],
+  [MARKETING_FILE]: [],
+  [TEAM_FILE]: [],
+  [IDEAS_FILE]: [],
+  [GOALS_FILE]: { weekly_target: 15 }
+};
+Object.entries(DEFAULTS).forEach(([f, def]) => {
+  try { cache[f] = JSON.parse(fs.readFileSync(f, 'utf8')); }
+  catch { cache[f] = def; }
+});
+console.log('Cache loaded. Practitioners:', Array.isArray(cache[PRACTITIONERS_FILE]) ? cache[PRACTITIONERS_FILE].length : '?');
+
+function readJSON(filePath, defaultValue) {
+  if (cache[filePath] !== undefined) return cache[filePath];
+  return defaultValue !== undefined ? defaultValue : [];
 }
 
 function writeJSON(filePath, data) {
-  // Non-blocking — never stall the response waiting on NFS/volume
+  cache[filePath] = data;
   fs.promises.writeFile(filePath, JSON.stringify(data, null, 2))
     .catch(err => console.error('Write error:', path.basename(filePath), err.message));
 }

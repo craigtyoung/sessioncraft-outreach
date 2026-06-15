@@ -669,7 +669,6 @@ function renderPanelFields(item) {
     });
   });
 }
-}
 
 // ===== Contacts (Org sub-layer) =====
 

@@ -984,9 +984,6 @@ function orgForm(data = {}) {
       </div>
     </div>
     <div class="form-group"><label>Tier</label><select class="form-select" id="fTier">${tierOptions}</select></div>
-    <div class="form-row">
-      <div class="form-group"><label>Channel</label><select class="form-select" id="fChannel"><option value="">—</option><option value="Email"${data.channel==="Email"?" selected":""}>Email</option><option value="Instagram DM"${data.channel==="Instagram DM"?" selected":""}>Instagram DM</option><option value="LinkedIn"${data.channel==="LinkedIn"?" selected":""}>LinkedIn</option><option value="In Person"${data.channel==="In Person"?" selected":""}>In Person</option><option value="Other"${data.channel==="Other"?" selected":""}>Other</option></select></div>
-    </div>
     <div class="form-group"><label>Platform Fit</label><div class="field-checkboxes" style="padding:4px 0">${fitChecks}</div></div>
     <div class="form-row">
       <div class="form-group"><label>Key Contact</label><input class="form-input" id="fKeyContact" value="${data.keyContact || ''}" /></div>
@@ -1039,15 +1036,21 @@ async function saveModal() {
       notes: document.getElementById('fNotes').value.trim(),
       log: []
     };
-    const res = await fetch('/api/ideas', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(r => r.json());
-    allData.ideas.push(res);
-    closeModalFn();
-    renderFilterBar();
-    renderMain();
+    try {
+      const r = await fetch('/api/ideas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!r.ok) throw new Error(`Server error ${r.status}`);
+      const res = await r.json();
+      allData.ideas.push(res);
+      closeModalFn();
+      renderFilterBar();
+      renderMain();
+    } catch (err) {
+      alert('Save failed: ' + err.message + '\nCheck your connection and try again.');
+    }
     return;
   } else if (currentTab === 'practitioners') {
     const fitSelected = Array.from(document.querySelectorAll('input[name="fPlatformFit"]:checked')).map(c => c.value);
@@ -1091,16 +1094,21 @@ async function saveModal() {
   }
 
   const endpoint = currentTab === 'practitioners' ? 'practitioners' : 'organizations';
-  const res = await fetch(`/api/${endpoint}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).then(r => r.json());
-
-  allData[currentTab].push(res);
-  closeModalFn();
-  renderFilterBar();
-  renderMain();
+  try {
+    const r = await fetch(`/api/${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!r.ok) throw new Error(`Server error ${r.status}`);
+    const res = await r.json();
+    allData[currentTab].push(res);
+    closeModalFn();
+    renderFilterBar();
+    renderMain();
+  } catch (err) {
+    alert('Save failed: ' + err.message + '\nCheck your connection and try again.');
+  }
 }
 
 function closeModalFn() {

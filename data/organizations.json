@@ -41,7 +41,8 @@
         "status": "Research Needed",
         "log": []
       }
-    ]
+    ],
+    "assigned_to": "Craig"
   },
   {
     "id": "o2",
@@ -85,7 +86,8 @@
         "status": "Research Needed",
         "log": []
       }
-    ]
+    ],
+    "assigned_to": "Craig"
   },
   {
     "id": "o3",
@@ -104,7 +106,8 @@
     "warmConnection": false,
     "notes": "Online-first model = scalable. High music consumption per session (2 hours). Perfect SessionCraft fit.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o4",
@@ -131,7 +134,8 @@
         "createdAt": "2026-04-14T18:21:32.969Z"
       }
     ],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o5",
@@ -165,7 +169,8 @@
         "createdAt": "2026-04-13T15:27:32.437Z"
       }
     ],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o6",
@@ -184,7 +189,8 @@
     "warmConnection": false,
     "notes": "Every facilitator is a music consumer by definition. Licensing for ecstatic dance events is a massive untapped market.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o7",
@@ -203,7 +209,8 @@
     "warmConnection": false,
     "notes": "Legacy market. Premium pricing acceptable. Facilitators trained in music curation as core skill.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o8",
@@ -247,7 +254,8 @@
         "status": "Research Needed",
         "log": []
       }
-    ]
+    ],
+    "assigned_to": "Craig"
   },
   {
     "id": "o9",
@@ -291,7 +299,8 @@
         "status": "Research Needed",
         "log": []
       }
-    ]
+    ],
+    "assigned_to": "Craig"
   },
   {
     "id": "o10",
@@ -310,7 +319,8 @@
     "warmConnection": false,
     "notes": "Every Kundalini teacher uses music in every session. Non-negotiable part of the tradition.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o11",
@@ -329,7 +339,8 @@
     "warmConnection": false,
     "notes": "Potential PARTNER not just customer. They solve 'what music do teachers use' — SessionCraft solves 'how do teachers USE music in sessions.'",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o12",
@@ -348,7 +359,8 @@
     "warmConnection": false,
     "notes": "Strategic: could be distribution partner for Craig's music AND channel to their teacher network.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o13",
@@ -367,7 +379,8 @@
     "warmConnection": true,
     "notes": "WARMEST B2B CONNECTION. Expand from one licensed track to ongoing platform relationship. Trainers run local groups worldwide.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o14",
@@ -401,7 +414,8 @@
         "createdAt": "2026-04-14T18:38:24.914Z"
       }
     ],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o15",
@@ -420,7 +434,8 @@
     "warmConnection": false,
     "notes": "Every facilitator runs music-heavy ceremonies. Direct B2B opportunity.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o16",
@@ -439,7 +454,8 @@
     "warmConnection": false,
     "notes": "Approach as 'preferred music provider for Holden QiGong certified teachers.'",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o17",
@@ -466,7 +482,8 @@
         "createdAt": "2026-04-14T18:21:03.593Z"
       }
     ],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o18",
@@ -485,7 +502,8 @@
     "warmConnection": false,
     "notes": "Massive but bureaucratic. If you get in, the scale is unmatched.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o19",
@@ -504,7 +522,8 @@
     "warmConnection": false,
     "notes": "Institutional/clinical angle. Tech+music crossover.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o20",
@@ -523,7 +542,8 @@
     "warmConnection": false,
     "notes": "Music formally part of their system.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o21",
@@ -567,7 +587,8 @@
         "status": "Research Needed",
         "log": []
       }
-    ]
+    ],
+    "assigned_to": "Craig"
   },
   {
     "id": "o22",
@@ -586,7 +607,8 @@
     "warmConnection": false,
     "notes": "Massive brand. 21-Day Meditation = huge music licensing opportunity.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o23",
@@ -605,7 +627,8 @@
     "warmConnection": false,
     "notes": "Partnership/event sponsorship opportunity.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o24",
@@ -624,7 +647,8 @@
     "warmConnection": false,
     "notes": "Large certified teacher network. Venue + teacher training combined.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o25",
@@ -643,7 +667,8 @@
     "warmConnection": false,
     "notes": "Direct pipeline of practitioners who need music tools.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o26",
@@ -662,7 +687,8 @@
     "warmConnection": false,
     "notes": "Volume play. Even 10% adoption across 2000+ instructors is significant.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o27",
@@ -681,7 +707,8 @@
     "warmConnection": false,
     "notes": "Large network. Music secondary but still used.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o28",
@@ -700,7 +727,8 @@
     "warmConnection": false,
     "notes": "Influencer/celebrity adjacent. Good for brand awareness.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o29",
@@ -719,7 +747,8 @@
     "warmConnection": false,
     "notes": "Massive platform but complex partnership. Events are music-heavy.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o30",
@@ -738,7 +767,8 @@
     "warmConnection": false,
     "notes": "Major hub for transformational teachers. Venue partner opportunity.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o31",
@@ -757,7 +787,8 @@
     "warmConnection": false,
     "notes": "Clinical/institutional channel. Large certified network.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o32",
@@ -776,7 +807,8 @@
     "warmConnection": false,
     "notes": "Established MTT program. Graduates need music for classes.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o33",
@@ -795,7 +827,8 @@
     "warmConnection": false,
     "notes": "Connected to Sounds True. Strong network effect.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o34",
@@ -814,7 +847,8 @@
     "warmConnection": false,
     "notes": "Growing MTT network. Strong personal brand.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o35",
@@ -833,7 +867,8 @@
     "warmConnection": false,
     "notes": "Event-based model = music is a production expense they already budget for.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o36",
@@ -852,7 +887,8 @@
     "warmConnection": false,
     "notes": "Medical/institutional angle. Compliance-conscious market.",
     "log": [],
-    "contacts": []
+    "contacts": [],
+    "assigned_to": "Craig"
   },
   {
     "id": "o1776094780863",
@@ -869,7 +905,8 @@
     "musicRelevance": 4,
     "whyTarget": "I have an ongoing relationship with Tristan and and Sabrina at the Satori method and they have been using my music for the last two years or so without paying",
     "notes": "I need to get back to Tristan in a hurry",
-    "warmConnection": true
+    "warmConnection": true,
+    "assigned_to": "Craig"
   },
   {
     "id": "o1776094899790",
@@ -886,6 +923,7 @@
     "musicRelevance": 2,
     "whyTarget": "",
     "notes": "",
-    "warmConnection": true
+    "warmConnection": true,
+    "assigned_to": "Craig"
   }
 ]

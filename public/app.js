@@ -10,6 +10,8 @@ let modalSaveAction = null;
 const TEAM_MEMBERS = ['Craig', 'Scottie', 'Christine'];
 let currentUser = localStorage.getItem('sc_user') || 'Craig';
 let showMineOnly = localStorage.getItem('sc_mine') !== 'false'; // default true
+const _warmPref = localStorage.getItem('sc_warm');
+let showWarmOnly = _warmPref === null ? (currentUser === 'Craig') : _warmPref !== 'false'; // Craig's login opens to the warm list
 let kanbanMode = 'status'; // 'status' | 'tier'
 let goals = { weekly_target: 15 };
 let currentTheme = localStorage.getItem('sc_theme') || 'dark';
@@ -137,6 +139,7 @@ function renderCard(item) {
 }
 
 function renderPractitionerCard(p) {
+  const personalTag = p.personal ? `<span class="tag" style="background:var(--sc-gold,#c9a227);color:#1a1a1a;font-weight:600;">★ Personal</span>` : '';
   const warmTag = p.warmth ? `<span class="tag tag-${p.warmth.toLowerCase()}">${p.warmth}</span>` : '';
   const demoTag = p.demo ? `<span class="tag tag-demo">Demo</span>` : '';
   const acctTag = p.accountCreated ? `<span class="tag tag-account">Account</span>` : '';
@@ -150,7 +153,7 @@ function renderPractitionerCard(p) {
     <div class="card" data-id="${p.id}" draggable="true">
       <div class="card-name">${p.name}</div>
       <div class="card-sub">${p.source || ''}</div>
-      <div class="card-tags">${warmTag}${modTag}${channelTag}${acctTag}${demoTag}${playlistTag}${fitTags}${assignedTag}${landedTag}</div>
+      <div class="card-tags">${personalTag}${warmTag}${modTag}${channelTag}${acctTag}${demoTag}${playlistTag}${fitTags}${assignedTag}${landedTag}</div>
     </div>`;
 }
 
@@ -194,13 +197,26 @@ function teamViewControls() {
   const mineLabel = showMineOnly ? 'Mine' : 'All';
   const mineClass = showMineOnly ? 'filter-toggle active' : 'filter-toggle';
   const tierLabel = kanbanMode === 'tier' ? 'By Tier' : 'By Status';
+  const warmBtn = currentTab === 'practitioners'
+    ? `<button class="${showWarmOnly ? 'filter-toggle active' : 'filter-toggle'}" id="btnWarmToggle">${showWarmOnly ? '★ Warm List' : 'All Contacts'}</button>`
+    : '';
   return `
+    ${warmBtn}
     <button class="${mineClass}" id="btnMineToggle">${mineLabel}</button>
     <button class="filter-toggle" id="btnKanbanToggle">${tierLabel}</button>
   `;
 }
 
 function bindTeamViewControls() {
+  const warmBtn = document.getElementById('btnWarmToggle');
+  if (warmBtn) {
+    warmBtn.addEventListener('click', () => {
+      showWarmOnly = !showWarmOnly;
+      localStorage.setItem('sc_warm', showWarmOnly);
+      renderFilterBar();
+      renderMain();
+    });
+  }
   const mineBtn = document.getElementById('btnMineToggle');
   if (mineBtn) {
     mineBtn.addEventListener('click', () => {
@@ -271,6 +287,10 @@ function getFilteredData() {
   // Mine/All filter — only on practitioner + org tabs
   if (showMineOnly && (currentTab === 'practitioners' || currentTab === 'organizations')) {
     data = data.filter(d => !d.assigned_to || d.assigned_to === currentUser);
+  }
+  // Warm List filter — personal contacts only, practitioner tab
+  if (showWarmOnly && currentTab === 'practitioners') {
+    data = data.filter(d => d.personal === true);
   }
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
@@ -1001,6 +1021,7 @@ function practitionerForm(data = {}) {
       </div>
     </div>
     <div class="form-group"><label>Tier</label><select class="form-select" id="fTier">${tierOptions}</select></div>
+    <div class="form-group"><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="fPersonal" ${data.personal ? 'checked' : ''} /> ★ Personal contact (my warm list)</label></div>
     <div class="form-group"><label>Platform Fit</label><div class="field-checkboxes" style="padding:4px 0">${fitChecks}</div></div>
     <div class="form-group"><label>Offering</label><input class="form-input" id="fOffering" value="${data.offering || ''}" /></div>
     <div class="form-group"><label>Notes</label><textarea class="form-textarea" id="fNotes" rows="3">${data.notes || ''}</textarea></div>
@@ -1124,6 +1145,7 @@ async function saveModal() {
       assigned_to: document.getElementById('fAssigned').value,
       tier: document.getElementById('fTier').value,
       platform_fit: fitSelected,
+      personal: document.getElementById('fPersonal') ? document.getElementById('fPersonal').checked : false,
       channel: document.getElementById('fChannel') ? document.getElementById('fChannel').value : '',
       offering: document.getElementById('fOffering').value.trim(),
       notes: document.getElementById('fNotes').value.trim(),

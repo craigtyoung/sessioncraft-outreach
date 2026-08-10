@@ -170,6 +170,7 @@ function renderPractitionerCard(p) {
   const channelTag = p.channel ? `<span class="tag tag-channel">${p.channel}</span>` : '';
   return `
     <div class="card" data-id="${p.id}" draggable="true">
+      <button class="card-del" data-del="${p.id}" title="Remove from pipeline">✕</button>
       <div class="card-name">${p.name}</div>
       <div class="card-sub">${p.source || ''}</div>
       <div class="card-tags">${personalTag}${challengeTag}${warmTag}${modTag}${channelTag}${acctTag}${demoTag}${playlistTag}${fitTags}${assignedTag}${landedTag}</div>
@@ -508,13 +509,24 @@ function renderPanelFields(item) {
         <span class="field-value">${item.offering || '—'}</span>
       </div>
       <div class="field-row">
-        <span class="field-label">Checkboxes</span>
+        <span class="field-label">Progress</span>
         <span class="field-value">
           <div class="field-checkboxes">
             <label class="check-item"><input type="checkbox" data-field="accountCreated" ${item.accountCreated ? 'checked' : ''} /> Account Created</label>
+            <label class="check-item"><input type="checkbox" data-field="playlistCreated" ${item.playlistCreated ? 'checked' : ''} /> Created a Meditation</label>
             <label class="check-item"><input type="checkbox" data-field="demo" ${item.demo ? 'checked' : ''} /> Demo Done</label>
-            <label class="check-item"><input type="checkbox" data-field="playlistCreated" ${item.playlistCreated ? 'checked' : ''} /> First Playlist</label>
             <label class="check-item"><input type="checkbox" data-field="followUp" ${item.followUp ? 'checked' : ''} /> Follow Up Needed</label>
+          </div>
+        </span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">Segments</span>
+        <span class="field-value">
+          <div class="field-checkboxes">
+            <label class="check-item"><input type="checkbox" data-field="challenge" ${item.challenge ? 'checked' : ''} /> Challenge</label>
+            <label class="check-item"><input type="checkbox" data-field="personal" ${item.personal ? 'checked' : ''} /> Personal</label>
+            <label class="check-item"><input type="checkbox" data-field="partner" ${item.partner ? 'checked' : ''} /> Partner</label>
+            <label class="check-item"><input type="checkbox" data-field="member" ${item.member ? 'checked' : ''} /> Member</label>
           </div>
         </span>
       </div>
@@ -1350,6 +1362,16 @@ function positionTooltip(e, tooltip) {
   tooltip.style.top = y + 'px';
 }
 
+async function deleteCardById(id) {
+  const item = allData[currentTab].find(d => d.id === id);
+  if (!item) return;
+  if (!confirm('Remove ' + (item.name || item.title || 'this card') + ' from the pipeline? This cannot be undone.')) return;
+  const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'ideas' ? 'ideas' : 'organizations';
+  await fetch('/api/' + endpoint + '/' + id, { method: 'DELETE' });
+  allData[currentTab] = allData[currentTab].filter(d => d.id !== id);
+  renderMain();
+}
+
 function bindCardClicks() {
   // Click handler — open panel (only if not dragging)
   document.querySelectorAll('.card').forEach(card => {
@@ -1357,6 +1379,8 @@ function bindCardClicks() {
       card._mouseDownPos = { x: e.clientX, y: e.clientY };
     });
     card.addEventListener('click', e => {
+      const del = e.target.closest('.card-del');
+      if (del) { e.stopPropagation(); deleteCardById(del.dataset.del); return; }
       if (card._wasDragged) {
         card._wasDragged = false;
         return;

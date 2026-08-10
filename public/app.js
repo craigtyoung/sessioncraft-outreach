@@ -10,7 +10,8 @@ let modalSaveAction = null;
 const TEAM_MEMBERS = ['Craig', 'Scottie', 'Christine'];
 let currentUser = localStorage.getItem('sc_user') || 'Craig';
 let showMineOnly = localStorage.getItem('sc_mine') !== 'false'; // default true
-let currentSegment = localStorage.getItem('sc_segment') || (currentUser === 'Craig' ? 'warm' : 'all'); // warm | challenge | all
+let currentSegment = localStorage.getItem('sc_segment') || (currentUser === 'Craig' ? 'warm' : 'all'); // warm | all
+if (currentSegment === 'challenge') currentSegment = 'all'; // Challenge segment retired
 let kanbanMode = 'status'; // 'status' | 'tier'
 let goals = { weekly_target: 15 };
 let currentTheme = localStorage.getItem('sc_theme_v2') || 'light';
@@ -129,7 +130,7 @@ function renderMain() {
   if (kanbanMode === 'tier' && (currentTab === 'practitioners' || currentTab === 'organizations')) {
     const html = `<div class="pipeline">${TIER_STAGES.map(t => renderColumn(t, data.filter(d => (d.tier || 'Individual') === t), 'tier')).join('')}</div>`;
     document.getElementById('mainContent').innerHTML = html;
-  } else if (currentTab === 'practitioners' && currentSegment === 'challenge') {
+  } else if (currentTab === 'practitioners' && currentProduct === 'Voice') {
     const html = `<div class="pipeline">${CHALLENGE_STAGES.map(s => renderColumn(s, data.filter(d => challengeStageOf(d) === s), 'challenge')).join('')}</div>`;
     document.getElementById('mainContent').innerHTML = html;
   } else {
@@ -222,7 +223,7 @@ function teamViewControls() {
   const mineClass = showMineOnly ? 'filter-toggle active' : 'filter-toggle';
   const tierLabel = kanbanMode === 'tier' ? 'By Tier' : 'By Status';
   const segCtrl = currentTab === 'practitioners'
-    ? [['warm','★ Warm'],['challenge','Challenge'],['all','All']].map(([s,label]) =>
+    ? [['warm','★ Warm'],['all','All']].map(([s,label]) =>
         `<button class="filter-toggle${currentSegment === s ? ' active' : ''}" id="seg_${s}">${label}</button>`
       ).join('')
     : '';
@@ -234,7 +235,7 @@ function teamViewControls() {
 }
 
 function bindTeamViewControls() {
-  ['warm','challenge','all'].forEach(s => {
+  ['warm','all'].forEach(s => {
     const b = document.getElementById('seg_' + s);
     if (b) b.addEventListener('click', () => {
       currentSegment = s;

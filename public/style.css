@@ -2,32 +2,36 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --sc-gold: #dde196;
-  --sc-gold-light: #eef0b8;
-  --sc-gold-dim: rgba(221,225,150,0.15);
-  --bg: #0E0E10;
-  --bg2: #16161A;
-  --bg3: #1E1E24;
-  --bg4: #26262E;
-  --border: rgba(255,255,255,0.08);
-  --text: #F0EFE8;
-  --text-muted: #888;
-  --text-dim: #555;
-  --hot: #FF6B6B;
-  --warm: #F9A825;
-  --cool: #64B5F6;
-  --green: #66BB6A;
-  --red: #EF5350;
-  --radius: 10px;
-  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  /* Outreach Hub — light navy/powder with SessionCraft gold accent */
+  --sc-gold: #B0894A;
+  --sc-gold-light: #C8A65E;
+  --sc-gold-dim: rgba(176,137,74,0.14);
+  --navy: #0E1B2C; --navy-2: #13253b; --navy-3: #1b3350;
+  --powder: #8FB8DE; --blue: #4C89C4; --blue-deep: #2E6BA6;
+  --bg: #F4F7FA;
+  --bg2: #FFFFFF;
+  --bg3: #EEF3F8;
+  --bg4: #E3EAF1;
+  --border: #E3EAF1;
+  --text: #16202E;
+  --text-muted: #5B6B7D;
+  --text-dim: #93A2B2;
+  --hot: #D98B8B;
+  --warm: #E0A458;
+  --cool: #4C89C4;
+  --green: #3FA98C;
+  --red: #D9534F;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(16,27,44,0.04), 0 8px 24px rgba(16,27,44,0.06);
 }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: 14px;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ===== Header ===== */
@@ -566,20 +570,33 @@ main {
 }
 .idea-tooltip.visible { opacity: 1; }
 
-/* ===== Light Mode ===== */
+/* ===== Light Mode (default) ===== */
 [data-theme="light"] {
-  --bg: #F5F4F0;
+  --bg: #F4F7FA;
   --bg2: #FFFFFF;
-  --bg3: #EEEDE8;
-  --bg4: #E2E0DA;
-  --border: rgba(0,0,0,0.10);
-  --text: #1A1A22;
-  --text-muted: #666;
-  --text-dim: #999;
-  --shadow: 0 4px 24px rgba(0,0,0,0.10);
+  --bg3: #EEF3F8;
+  --bg4: #E3EAF1;
+  --border: #E3EAF1;
+  --text: #16202E;
+  --text-muted: #5B6B7D;
+  --text-dim: #93A2B2;
+  --shadow: 0 1px 2px rgba(16,27,44,0.04), 0 8px 24px rgba(16,27,44,0.06);
 }
-[data-theme="light"] .modal-overlay { background: rgba(0,0,0,0.35); }
-[data-theme="light"] .overlay { background: rgba(0,0,0,0.25); }
+[data-theme="light"] .modal-overlay { background: rgba(14,27,44,0.35); }
+[data-theme="light"] .overlay { background: rgba(14,27,44,0.28); }
+
+/* ===== Dark Mode (navy) ===== */
+[data-theme="dark"] {
+  --bg: #0E1B2C;
+  --bg2: #13253b;
+  --bg3: #1b3350;
+  --bg4: #24405f;
+  --border: rgba(255,255,255,0.08);
+  --text: #EAF1F8;
+  --text-muted: #9DB2C7;
+  --text-dim: #6B8299;
+  --shadow: 0 8px 28px rgba(0,0,0,0.45);
+}
 
 /* ===== Goals Bar ===== */
 .goals-bar {
@@ -665,3 +682,67 @@ main {
   flex-shrink: 0;
 }
 .theme-toggle:hover { border-color: var(--sc-gold); color: var(--sc-gold); }
+
+/* ================================================================
+   Shared Sidebar Shell — unifies Overview + Board
+   ================================================================ */
+.app-shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+
+.side {
+  background: var(--navy);
+  color: #C7D6E6;
+  padding: 22px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.side .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 24px; padding: 0 6px; }
+.side .brand img { width: 34px; height: 34px; border-radius: 9px; }
+.side .brand-text h1 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600; font-size: 16.5px; color: #fff; line-height: 1.1;
+}
+.side .brand-text span { font-size: 11px; color: #7E96AE; letter-spacing: 0.03em; }
+
+.side-nav { display: flex; flex-direction: column; gap: 3px; }
+.side-nav .grp { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.09em; color: #63788F; margin: 16px 6px 6px; }
+.side-link, .side .tab-btn {
+  display: flex; align-items: center; gap: 11px;
+  width: 100%; text-align: left; justify-content: flex-start;
+  padding: 10px 12px; border-radius: 9px;
+  color: #AFC2D6; font-size: 14px; font-weight: 500;
+  background: none; border: none; cursor: pointer; text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+}
+.side-link .ic, .side .tab-btn .ic { width: 16px; text-align: center; opacity: 0.85; font-size: 13px; }
+.side-link:hover, .side .tab-btn:hover { background: var(--navy-2); color: #fff; }
+.side-link.active, .side .tab-btn.active { background: var(--navy-3); color: #fff; }
+
+.side-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--navy-3); display: flex; flex-direction: column; gap: 12px; }
+.side-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.side .user-selector { margin-left: 0; }
+.side .user-label { color: #7E96AE; }
+.side .user-select { background: var(--navy-2); border-color: var(--navy-3); color: #EAF1F8; }
+.side .theme-toggle { background: var(--navy-2); border-color: var(--navy-3); color: #AFC2D6; }
+.side .theme-toggle:hover { color: #fff; border-color: var(--powder); }
+.side .btn-primary { width: 100%; }
+
+.main-col { min-width: 0; display: flex; flex-direction: column; }
+
+/* Playfair for the large headings only */
+.panel-header h2, .modal-header h2 { font-family: 'Playfair Display', serif; font-weight: 600; }
+
+/* Card hover uses the gold accent softly */
+.card:hover { border-color: var(--sc-gold); background: var(--bg2); box-shadow: var(--shadow); }
+.btn-primary { color: #16202E; }
+
+@media (max-width: 860px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .side { position: static; height: auto; flex-direction: column; }
+  .side-nav { flex-flow: row wrap; }
+  .side-foot { margin-top: 12px; }
+}

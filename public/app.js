@@ -13,7 +13,7 @@ let showMineOnly = localStorage.getItem('sc_mine') !== 'false'; // default true
 let currentSegment = localStorage.getItem('sc_segment') || (currentUser === 'Craig' ? 'warm' : 'all'); // warm | challenge | all
 let kanbanMode = 'status'; // 'status' | 'tier'
 let goals = { weekly_target: 15 };
-let currentTheme = localStorage.getItem('sc_theme') || 'dark';
+let currentTheme = localStorage.getItem('sc_theme_v2') || 'light';
 
 // ===== Pipeline Stages =====
 const PRACTITIONER_STAGES = ['Not Contacted', 'Contacted', 'Responded', 'Account Created', 'Demo Done', 'Onboarded', 'Affiliate'];
@@ -1295,7 +1295,7 @@ function bindGlobalEvents() {
   if (themeBtn) {
     themeBtn.addEventListener('click', () => {
       currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('sc_theme', currentTheme);
+      localStorage.setItem('sc_theme_v2', currentTheme);
       applyTheme();
     });
   }

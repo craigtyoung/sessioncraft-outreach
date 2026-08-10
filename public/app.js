@@ -596,7 +596,7 @@ function renderPanelFields(item) {
     fields += `<div class="field-note">${item.notes}</div>`;
   }
 
-  const deleteLabel = currentTab === 'practitioners' ? 'practitioner' : 'organization';
+  const deleteLabel = currentTab === 'practitioners' ? 'individual' : 'organization';
   fields += '<div class="panel-delete-action"><button class="btn-delete-record" id="btnDeleteRecord">Delete this ' + deleteLabel + '</button></div>';
 
   if (currentTab === 'organizations') {
@@ -1010,7 +1010,7 @@ function closePanel() {
 
 // ===== Add Modal =====
 function openAddModal() {
-  const titles = { practitioners: 'Add Practitioner', organizations: 'Add Organization', ideas: 'New Idea' };
+  const titles = { practitioners: 'Add Individual', organizations: 'Add Organization', ideas: 'New Idea' };
   document.getElementById('modalTitle').textContent = titles[currentTab] || 'Add';
   let formHtml;
   if (currentTab === 'practitioners') formHtml = practitionerForm();

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outreach Hub — Overview</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230E1B2C'/><circle cx='16' cy='16' r='7' fill='none' stroke='%238FB8DE' stroke-width='2.5'/><circle cx='16' cy='16' r='2.5' fill='%238FB8DE'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0E1B2C; --navy-2:#13253b; --navy-3:#1b3350;
+    --ink:#16202E; --muted:#5B6B7D; --line:#E3EAF1;
+    --bg:#F4F7FA; --card:#FFFFFF;
+    --powder:#8FB8DE; --blue:#4C89C4; --blue-deep:#2E6BA6;
+    --green:#3FA98C; --amber:#E0A458; --rose:#D98B8B;
+    --shadow:0 1px 2px rgba(16,27,44,.04),0 8px 24px rgba(16,27,44,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+  a{color:inherit;text-decoration:none}
+
+  .side{background:var(--navy);color:#C7D6E6;padding:26px 18px;display:flex;flex-direction:column;gap:6px}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:0 6px}
+  .emblem{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--powder),var(--blue-deep));display:grid;place-items:center;color:#fff;font-family:'Playfair Display';font-weight:700;font-size:18px}
+  .brand h1{font-family:'Playfair Display';font-weight:600;font-size:17px;color:#fff;line-height:1.1}
+  .brand span{font-size:11px;color:#7E96AE;letter-spacing:.04em}
+  .nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:#AFC2D6;font-size:14px;font-weight:500}
+  .nav a .ic{width:16px;text-align:center;opacity:.85}
+  .nav a.active{background:var(--navy-3);color:#fff}
+  .nav a:hover:not(.active){background:var(--navy-2);color:#fff}
+  .nav .grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:#63788F;margin:18px 6px 6px}
+  .side .foot{margin-top:auto;padding:12px 8px 0;border-top:1px solid var(--navy-3);font-size:11.5px;color:#63788F}
+
+  .main{padding:28px 34px 46px;max-width:1180px}
+  .top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+  .top h2{font-family:'Playfair Display';font-weight:600;font-size:27px;letter-spacing:-.01em}
+  .top p{color:var(--muted);font-size:13.5px;margin-top:3px}
+  .cta{display:inline-flex;align-items:center;gap:8px;background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600}
+  .cta:hover{background:var(--navy-2)}
+  .pill{display:inline-flex;align-items:center;gap:7px;background:#EAF2FA;color:var(--blue-deep);border:1px solid #D3E4F3;padding:7px 13px;border-radius:100px;font-size:12.5px;font-weight:600}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(63,169,140,.18)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:17px 18px;box-shadow:var(--shadow)}
+  .kpi .lab{font-size:12px;color:var(--muted);font-weight:500;display:flex;align-items:center;gap:7px}
+  .kpi .num{font-family:'Playfair Display';font-weight:600;font-size:33px;line-height:1.1;margin-top:9px}
+  .kpi .sub{font-size:11.5px;margin-top:5px;font-weight:500}
+  .up{color:var(--green)} .warn{color:var(--amber)} .mut{color:var(--muted)}
+  .kpi .bar{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:13px}
+
+  .grid{display:grid;grid-template-columns:1.55fr 1fr;gap:16px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .card h3{font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .card h3 .hint{font-size:11.5px;color:var(--muted);font-weight:500}
+  .legend{display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--muted)}
+  .sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+  /* journey funnel */
+  .journey{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+  .jrow{display:grid;grid-template-columns:118px 1fr 66px;align-items:center;gap:10px}
+  .jrow .nm{font-size:12.5px;font-weight:500}
+  .jtrack{height:28px;background:#EEF3F8;border-radius:7px;overflow:hidden}
+  .jfill{height:100%;border-radius:7px;display:flex;align-items:center;padding-left:11px;color:#fff;font-size:12.5px;font-weight:600;min-width:26px;transition:width .6s cubic-bezier(.3,1,.4,1)}
+  .jrow .pct{font-size:11.5px;color:var(--muted);text-align:right}
+
+  .funnel{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+  .stage{display:grid;grid-template-columns:96px 1fr 30px;align-items:center;gap:10px}
+  .stage .nm{font-size:13px;font-weight:500}
+  .track{height:24px;background:#EEF3F8;border-radius:7px;overflow:hidden}
+  .fill{height:100%;border-radius:7px;display:flex;align-items:center;padding-left:9px;color:#fff;font-size:12px;font-weight:600;min-width:22px;transition:width .6s cubic-bezier(.3,1,.4,1)}
+  .stage .ct{font-size:13px;font-weight:600;text-align:right;color:var(--muted)}
+
+  .row2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  .chan{display:flex;flex-direction:column;gap:11px;margin-top:8px}
+  .chan .c{display:grid;grid-template-columns:76px 1fr 30px;align-items:center;gap:9px;font-size:12.5px}
+  .chan .t{height:9px;background:#EEF3F8;border-radius:6px;overflow:hidden}
+  .chan .f{height:100%;border-radius:6px}
+  .chan .v{text-align:right;font-weight:600;color:var(--muted);font-size:12px}
+
+  .ownwrap{display:flex;align-items:center;gap:16px;margin-top:8px}
+  .owlist{display:flex;flex-direction:column;gap:9px;font-size:12.5px;flex:1}
+  .owlist .o{display:flex;align-items:center;justify-content:space-between}
+  .owlist .o span{display:inline-flex;align-items:center;gap:7px}
+
+  .goalwrap{display:flex;align-items:center;gap:16px;margin-top:6px}
+  .goaltext{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .goaltext b{font-family:'Playfair Display';font-size:16px;color:var(--ink);font-weight:600}
+
+  .note{margin-top:20px;background:#EAF2FA;border:1px solid #D3E4F3;border-radius:12px;padding:13px 16px;font-size:12.5px;color:#2E5175;display:flex;gap:10px}
+  .note b{color:#1F3B57}
+  .loading{padding:60px;text-align:center;color:var(--muted);font-size:14px}
+  @media(max-width:900px){.app{grid-template-columns:1fr}.side{display:none}.kpis{grid-template-columns:1fr 1fr}.grid,.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <div class="emblem">◎</div>
+      <div><h1>Outreach Hub</h1><span>one audience · all products</span></div>
+    </div>
+    <nav class="nav">
+      <a class="active" href="/"><span class="ic">◆</span> Overview</a>
+      <a href="/index.html"><span class="ic">▤</span> The board</a>
+      <div class="grp">People</div>
+      <a href="/index.html"><span class="ic">♥</span> Personal</a>
+      <a href="/index.html"><span class="ic">◯</span> Signed up</a>
+      <a href="/index.html"><span class="ic">★</span> Members</a>
+      <a href="/index.html"><span class="ic">⤳</span> Partners</a>
+      <div class="grp">Filter by</div>
+      <a href="/index.html"><span class="ic">▸</span> Product</a>
+      <a href="/index.html"><span class="ic">▸</span> Owner</a>
+      <a href="/index.html"><span class="ic">▸</span> Source</a>
+    </nav>
+    <div class="foot" id="foot">Owners: Craig · Scottie · Christine</div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <div>
+        <h2>Where we stand</h2>
+        <p>One place to see the whole audience and what to send next.</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <span class="pill" id="weekPill"><span class="dot"></span> …</span>
+        <a class="cta" href="/index.html">Open the board →</a>
+      </div>
+    </div>
+    <div id="content"><div class="loading">Loading live data…</div></div>
+  </main>
+</div>
+
+<script>
+const $ = (s,el=document)=>el.querySelector(s);
+const pct = (n,d)=> d>0 ? Math.round(n/d*100) : 0;
+const esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+const STAGE_COLORS = {
+  'Personal':'var(--blue-deep)', 'Signed up':'var(--amber)', 'Member':'var(--green)',
+  'Partner':'var(--powder)', 'Prospect':'#B9C6D4'
+};
+const OWNER_COLORS = ['var(--blue-deep)','var(--powder)','var(--amber)','var(--rose)','#B9C6D4'];
+const CHAN_COLORS = { 'Warm':'var(--blue-deep)','Social':'var(--powder)','World':'var(--amber)','Cold':'var(--amber)' };
+
+function ring(segments, size=96, stroke=14){
+  const r=(size/2)-stroke/2, C=2*Math.PI*r; let off=0; let parts='';
+  const total=segments.reduce((a,s)=>a+s.value,0)||1;
+  parts += `<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#EEF3F8" stroke-width="${stroke}"/>`;
+  segments.forEach(s=>{
+    const len=s.value/total*C;
+    parts += `<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${stroke}" stroke-dasharray="${len.toFixed(1)} ${(C-len).toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}" transform="rotate(-90 ${size/2} ${size/2})"/>`;
+    off+=len;
+  });
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${parts}</svg>`;
+}
+
+function render(d){
+  const t=d.totals;
+  $('#weekPill').innerHTML = `<span class="dot"></span> ${d.reachOuts.thisWeek} reach-outs this week`;
+  $('#foot').innerHTML = `Owners: ${Object.keys(d.byOwner).join(' · ')}<br>Live data · updates as you work`;
+
+  // KPIs
+  const kpis = `<div class="kpis">
+    <div class="kpi"><div class="lab"><span class="bar" style="background:#EAF2FA;color:var(--blue-deep)">◱</span> Total contacts</div>
+      <div class="num">${t.contacts}</div><div class="sub mut">${t.withEmail} with email</div></div>
+    <div class="kpi"><div class="lab"><span class="bar" style="background:#E9F6F1;color:var(--green)">★</span> Paying members</div>
+      <div class="num">${t.members}</div><div class="sub mut">founding cohort</div></div>
+    <div class="kpi"><div class="lab"><span class="bar" style="background:#FBF1E3;color:var(--amber)">◯</span> Signed up, not creating</div>
+      <div class="num">${t.signedUpNotCreating}</div><div class="sub warn">the conversion gap → nurture</div></div>
+    <div class="kpi"><div class="lab"><span class="bar" style="background:#EAF2FA;color:var(--blue-deep)">✦</span> Reach-out goal</div>
+      <div class="num">${d.reachOuts.thisWeek}<span style="font-size:17px;color:var(--muted)"> / ${d.reachOuts.weeklyTarget}</span></div>
+      <div class="sub mut">this week</div></div>
+  </div>`;
+
+  // Journey funnel (hero) — real
+  const jmax = d.journey[0].count || 1;
+  const jcolors=['var(--blue-deep)','var(--blue)','var(--amber)','var(--rose)','var(--green)'];
+  const journey = d.journey.map((s,i)=>{
+    const w=Math.max(pct(s.count,jmax),3);
+    const rel = i===0?'':`${pct(s.count, d.journey[i-1].count)}% of prev`;
+    return `<div class="jrow"><span class="nm">${esc(s.label)}</span>
+      <div class="jtrack"><div class="jfill" style="width:${w}%;background:${jcolors[i]}">${s.count}</div></div>
+      <span class="pct">${rel}</span></div>`;
+  }).join('');
+
+  // Pipeline by stage
+  const order=['Personal','Signed up','Member','Partner','Prospect'];
+  const smax=Math.max(...order.map(k=>d.byStage[k]||0),1);
+  const icons={'Personal':'♥','Signed up':'◯','Member':'★','Partner':'⤳','Prospect':'·'};
+  const stagesHtml = order.filter(k=>d.byStage[k]!==undefined).map(k=>{
+    const v=d.byStage[k]||0;
+    return `<div class="stage"><span class="nm">${icons[k]} ${k}</span>
+      <div class="track"><div class="fill" style="width:${Math.max(pct(v,smax),3)}%;background:${STAGE_COLORS[k]}">${v}</div></div>
+      <span class="ct">${v}</span></div>`;
+  }).join('');
+
+  const hero = `<div class="grid">
+    <div class="card"><h3>The journey <span class="hint">contact → member · live</span></h3>
+      <div class="journey">${journey}</div>
+      <div class="legend"><span>Big drop after "Account created" — that's the ${t.signedUpNotCreating} to nurture back in.</span></div>
+    </div>
+    <div class="card"><h3>Pipeline <span class="hint">where people are</span></h3>
+      <div class="funnel">${stagesHtml}</div>
+      <div class="legend"><span>Move a card right as the relationship deepens.</span></div>
+    </div>
+  </div>`;
+
+  // Owners ring
+  const ownEntries=Object.entries(d.byOwner).sort((a,b)=>b[1]-a[1]);
+  const ownSegs=ownEntries.map((e,i)=>({value:e[1],color:OWNER_COLORS[i%OWNER_COLORS.length]}));
+  const ownTotal=ownEntries.reduce((a,e)=>a+e[1],0)||1;
+  const ownList=ownEntries.map((e,i)=>`<div class="o"><span><span class="sw" style="background:${OWNER_COLORS[i%OWNER_COLORS.length]}"></span> ${esc(e[0])}</span><b>${pct(e[1],ownTotal)}%</b></div>`).join('');
+
+  // Warmth breakdown (channel is sparse; warmth is fuller + real)
+  const warmOrder=['Hot','Warm','Cool','Unknown'];
+  const warmColors={'Hot':'var(--rose)','Warm':'var(--blue-deep)','Cool':'var(--powder)','Unknown':'#B9C6D4'};
+  const wTotal=Object.values(d.byWarmth).reduce((a,b)=>a+b,0)||1;
+  const warmHtml=warmOrder.filter(k=>d.byWarmth[k]).map(k=>{
+    const v=d.byWarmth[k];
+    return `<div class="c"><span>${k}</span><div class="t"><div class="f" style="width:${pct(v,wTotal)}%;background:${warmColors[k]}"></div></div><span class="v">${v}</span></div>`;
+  }).join('');
+
+  // Reach-out rhythm
+  const ro=d.reachOuts, goalPct=Math.min(pct(ro.thisWeek,ro.weeklyTarget),100);
+  const C=2*Math.PI*34, dash=(goalPct/100*C).toFixed(0);
+  const rhythm=`<svg width="86" height="86" viewBox="0 0 86 86">
+    <circle cx="43" cy="43" r="34" fill="none" stroke="#EEF3F8" stroke-width="11"/>
+    <circle cx="43" cy="43" r="34" fill="none" stroke="var(--green)" stroke-width="11" stroke-linecap="round" stroke-dasharray="${dash} ${(C-dash).toFixed(0)}" transform="rotate(-90 43 43)"/>
+    <text x="43" y="40" text-anchor="middle" font-family="Playfair Display" font-size="18" font-weight="600" fill="var(--ink)">${ro.thisWeek}</text>
+    <text x="43" y="55" text-anchor="middle" font-family="DM Sans" font-size="10" fill="var(--muted)">of ${ro.weeklyTarget}</text></svg>`;
+  const toGo=Math.max(ro.weeklyTarget-ro.thisWeek,0);
+
+  const bottom = `<div class="row2">
+    <div class="card"><h3>Contacts by warmth</h3><div class="chan">${warmHtml||'<span class="mut" style="font-size:12px">No warmth data yet</span>'}</div>
+      <div class="legend"><span>${d.byWarmth['Warm']||0} warm — the base to work first.</span></div></div>
+    <div class="card"><h3>Who owns the list</h3>
+      <div class="ownwrap">${ring(ownSegs)}<div class="owlist">${ownList}</div></div>
+      <div class="legend"><span>Goal: shift load off Craig.</span></div></div>
+    <div class="card"><h3>This week's rhythm</h3>
+      <div class="goalwrap">${rhythm}<div class="goaltext"><b>${toGo} to go</b><br>Reach-outs logged in "Sent."<br>~1 a day keeps feelers<br>going out.</div></div></div>
+  </div>`;
+
+  const note = `<div class="note"><span>◆</span><div><b>Live from your CRM (${t.contacts} contacts).</b>
+    Stages are derived from your existing flags (member, personal, account-created). Tag a contact's <b>stage</b>, <b>channel</b> (Warm/Social/World) or <b>product</b> on the board and these update instantly. Next: re-slot Boris → Partners, and tag products.</div></div>`;
+
+  $('#content').innerHTML = kpis + hero + bottom + note;
+}
+
+fetch('/api/overview').then(r=>r.json()).then(render).catch(e=>{
+  $('#content').innerHTML = `<div class="loading">Couldn't load stats — is the server running?<br><small>${esc(e.message)}</small></div>`;
+});
+</script>
+</body>
+</html>

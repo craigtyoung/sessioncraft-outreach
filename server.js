@@ -24,7 +24,9 @@ const IDEAS_FILE = path.join(DATA_DIR, 'ideas.json');
 const GOALS_FILE = path.join(DATA_DIR, 'goals.json');
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// Overview dashboard is the front door; the classic board stays at /index.html
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'overview.html')));
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 app.use((req, res, next) => {
   if (req.method !== 'GET') console.log(`${req.method} ${req.url} body:`, JSON.stringify(req.body).slice(0, 80));
   next();
@@ -445,6 +447,81 @@ app.put('/api/goals', (req, res) => {
   const updated = { ...current, ...req.body };
   writeJSON(GOALS_FILE, updated);
   res.json(updated);
+});
+
+// --- Overview / Dashboard stats ---
+function isoWeekKey(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + 'T00:00:00Z');
+  if (isNaN(d.getTime())) return null;
+  const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  const day = (t.getUTCDay() + 6) % 7;           // Mon=0..Sun=6
+  t.setUTCDate(t.getUTCDate() - day + 3);        // nearest Thursday
+  const firstThu = new Date(Date.UTC(t.getUTCFullYear(), 0, 4));
+  const week = 1 + Math.round(((t - firstThu) / 86400000 - 3 + ((firstThu.getUTCDay() + 6) % 7)) / 7);
+  return t.getUTCFullYear() + '-W' + String(week).padStart(2, '0');
+}
+
+// Relationship stage — priority order. Explicit p.stage always wins.
+function deriveStage(p) {
+  if (p.stage) return p.stage;
+  if (p.member === true) return 'Member';
+  if (p.partner === true) return 'Partner';
+  if (p.personal === true) return 'Personal';
+  if (p.accountCreated === true) return 'Signed up';
+  return 'Prospect';
+}
+
+app.get('/api/overview', (req, res) => {
+  const P = readJSON(PRACTITIONERS_FILE);
+  const S = readJSON(SENT_FILE);
+  const norm = v => (v == null ? '' : String(v));
+  const isContacted = p => { const s = norm(p.status); return s !== '' && s !== 'Not Contacted'; };
+
+  const stages = { Personal: 0, 'Signed up': 0, Member: 0, Partner: 0, Prospect: 0 };
+  const owners = {}, warmth = {}, channels = {};
+  let members = 0, accountCreated = 0, playlistCreated = 0, contacted = 0, withEmail = 0, signedUpNotCreating = 0;
+
+  P.forEach(p => {
+    const st = deriveStage(p);
+    stages[st] = (stages[st] || 0) + 1;
+    const o = norm(p.assigned_to) || 'Unassigned'; owners[o] = (owners[o] || 0) + 1;
+    const w = norm(p.warmth) || 'Unknown'; warmth[w] = (warmth[w] || 0) + 1;
+    if (p.channel) { const c = norm(p.channel); if (c) channels[c] = (channels[c] || 0) + 1; }
+    if (p.member === true) members++;
+    if (p.accountCreated === true) accountCreated++;
+    if (p.playlistCreated === true) playlistCreated++;
+    if (isContacted(p)) contacted++;
+    if (norm(p.email)) withEmail++;
+    if (p.accountCreated === true && p.playlistCreated !== true && p.member !== true) signedUpNotCreating++;
+  });
+
+  const byWeek = {};
+  S.forEach(s => { const k = isoWeekKey(norm(s.date)); if (k) byWeek[k] = (byWeek[k] || 0) + 1; });
+  const weeks = Object.keys(byWeek).sort();
+  const nowWeek = isoWeekKey(new Date().toISOString().slice(0, 10));
+  const goals = readJSON(GOALS_FILE, { weekly_target: 15 });
+
+  res.json({
+    totals: { contacts: P.length, withEmail, members, accountCreated, playlistCreated, contacted, signedUpNotCreating },
+    journey: [
+      { label: 'All contacts', count: P.length },
+      { label: 'Contacted', count: contacted },
+      { label: 'Account created', count: accountCreated },
+      { label: 'Created a track', count: playlistCreated },
+      { label: 'Paying member', count: members }
+    ],
+    byStage: stages,
+    byOwner: owners,
+    byWarmth: warmth,
+    byChannel: channels,
+    reachOuts: {
+      total: S.length,
+      thisWeek: byWeek[nowWeek] || 0,
+      weeklyTarget: goals.weekly_target || 15,
+      byWeek: weeks.map(w => ({ week: w, count: byWeek[w] }))
+    }
+  });
 });
 
 app.listen(PORT, () => {

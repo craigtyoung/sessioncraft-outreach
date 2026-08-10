@@ -30,6 +30,10 @@
   .nav a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:9px;color:#AFC2D6;font-size:14px;font-weight:500}
   .nav a .ic{width:16px;text-align:center;opacity:.85}
   .nav a.active{background:var(--navy-3);color:#fff}
+  .product-lens{padding:0 4px 4px;margin-bottom:10px}
+  .product-select{width:100%;background:var(--navy-2);color:#EAF1F8;border:1px solid var(--navy-3);border-radius:9px;padding:9px 30px 9px 11px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%238FB8DE' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:12px}
+  .product-select:hover{border-color:var(--powder)}
+  .product-select option{color:#16202E;background:#fff}
   .nav a:hover:not(.active){background:var(--navy-2);color:#fff}
   .nav .grp{font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;color:#63788F;margin:18px 6px 6px}
   .side .foot{margin-top:auto;padding:12px 8px 0;border-top:1px solid var(--navy-3);font-size:11.5px;color:#63788F}
@@ -101,6 +105,14 @@
     <div class="brand">
       <img src="/sc-voice-icon.png" alt="SessionCraft" class="emblem" style="object-fit:contain;background:transparent">
       <div><h1>SessionCraft Outreach</h1></div>
+    </div>
+    <div class="product-lens">
+      <select id="productSelect" class="product-select">
+        <option value="all">◆ All Products</option>
+        <option value="Voice">VoiceCraft</option>
+        <option value="Craft">SessionCraft</option>
+        <option value="SSB">Sacred Songbook</option>
+      </select>
     </div>
     <nav class="nav">
       <a class="active" href="/"><span class="ic">◆</span> Overview</a>
@@ -249,9 +261,25 @@ function render(d){
   $('#content').innerHTML = kpis + hero + bottom + note;
 }
 
-fetch('/api/overview').then(r=>r.json()).then(render).catch(e=>{
-  $('#content').innerHTML = `<div class="loading">Couldn't load stats — is the server running?<br><small>${esc(e.message)}</small></div>`;
+const PLABEL = { Voice:'VoiceCraft', Craft:'SessionCraft', SSB:'Sacred Songbook' };
+function loadOverview(){
+  const p = localStorage.getItem('sc_product') || 'all';
+  const sel = document.getElementById('productSelect'); if (sel) sel.value = p;
+  const sub = document.querySelector('.top p');
+  if (sub) sub.textContent = (p === 'all' ? 'All products' : PLABEL[p]) + ' · where we stand and what to send next.';
+  const qs = p !== 'all' ? ('?product=' + encodeURIComponent(p)) : '';
+  $('#content').innerHTML = '<div class="loading">Loading live data…</div>';
+  fetch('/api/overview' + qs).then(r=>r.json()).then(render).catch(e=>{
+    $('#content').innerHTML = `<div class="loading">Couldn't load stats — is the server running?<br><small>${esc(e.message)}</small></div>`;
+  });
+}
+document.addEventListener('change', e => {
+  if (e.target && e.target.id === 'productSelect') {
+    localStorage.setItem('sc_product', e.target.value);
+    loadOverview();
+  }
 });
+loadOverview();
 </script>
 </body>
 </html>

@@ -36,6 +36,10 @@ function challengePatch(stage) {
 const ORG_STAGES = ['Not Contacted', 'Contacted', 'Responded', 'Demo', 'Partner'];
 const TIER_STAGES = ['Individual', 'Group Leader', 'Organization'];
 const PLATFORM_FIT_OPTIONS = ['SSB', 'Voice', 'Craft'];
+// Product lens — one hub, three products. Stored value stays SSB/Voice/Craft; label is friendly.
+const PRODUCT_LABEL = { Voice: 'VoiceCraft', Craft: 'SessionCraft', SSB: 'Sacred Songbook', all: 'All Products' };
+const productLabel = k => PRODUCT_LABEL[k] || k;
+let currentProduct = localStorage.getItem('sc_product') || 'all';
 const IDEAS_STAGES = ['Brainstormed', 'Discussed', 'Executing', 'Completed'];
 const IDEAS_CATEGORIES = ['Warm Market', 'Practitioner Network', 'Content', 'Events', 'Partnerships', 'Growth Mechanics', 'Paid', 'Team'];
 const IDEAS_PLATFORMS = ['General', 'SessionCraft', 'Voice', 'Sacred Songbook'];
@@ -165,7 +169,7 @@ function renderPractitionerCard(p) {
   const playlistTag = p.playlistCreated ? `<span class="tag tag-playlist">Playlist</span>` : '';
   const modTag = p.modality ? `<span class="tag tag-modality">${p.modality}</span>` : '';
   const assignedTag = p.assigned_to && p.assigned_to !== currentUser ? `<span class="tag tag-assigned">${p.assigned_to}</span>` : '';
-  const fitTags = (p.platform_fit || []).map(f => `<span class="tag tag-fit tag-fit-${f.toLowerCase()}">${f}</span>`).join('');
+  const fitTags = (p.platform_fit || []).map(f => `<span class="tag tag-fit tag-fit-${f.toLowerCase()}">${productLabel(f)}</span>`).join('');
   const landedTag = p.landed_by ? `<span class="tag tag-landed">${p.landed_by}</span>` : '';
   const channelTag = p.channel ? `<span class="tag tag-channel">${p.channel}</span>` : '';
   return `
@@ -183,7 +187,7 @@ function renderOrgCard(o) {
   const warmTag = o.warmConnection ? `<span class="tag tag-connection">Warm</span>` : '';
   const catTag = o.category ? `<span class="tag tag-category">${o.category}</span>` : '';
   const assignedTag = o.assigned_to && o.assigned_to !== currentUser ? `<span class="tag tag-assigned">${o.assigned_to}</span>` : '';
-  const fitTags = (o.platform_fit || []).map(f => `<span class="tag tag-fit tag-fit-${f.toLowerCase()}">${f}</span>`).join('');
+  const fitTags = (o.platform_fit || []).map(f => `<span class="tag tag-fit tag-fit-${f.toLowerCase()}">${productLabel(f)}</span>`).join('');
   const landedTag = o.landed_by ? `<span class="tag tag-landed">${o.landed_by}</span>` : '';
   const channelTag = o.channel ? `<span class="tag tag-channel">${o.channel}</span>` : '';
   const dots = Array.from({ length: 5 }, (_, i) =>
@@ -314,6 +318,10 @@ function getFilteredData() {
   if (currentTab === 'practitioners') {
     if (currentSegment === 'warm') data = data.filter(d => d.personal === true);
     else if (currentSegment === 'challenge') data = data.filter(d => d.challenge === true);
+  }
+  // Product lens — filter to contacts tagged for the selected product
+  if (currentProduct !== 'all' && (currentTab === 'practitioners' || currentTab === 'organizations')) {
+    data = data.filter(d => (d.platform_fit || []).includes(currentProduct));
   }
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
@@ -478,7 +486,7 @@ function renderPanelFields(item) {
     const assignedOpts = TEAM_MEMBERS.map(m => `<option value="${m}"${m === (item.assigned_to || '') ? ' selected' : ''}>${m}</option>`).join('');
     const landedOpts = ['', ...TEAM_MEMBERS].map(m => `<option value="${m}"${m === (item.landed_by || '') ? ' selected' : ''}>${m || '—'}</option>`).join('');
     const channelOpts = ['', 'Email', 'Instagram DM', 'LinkedIn', 'In Person', 'Other'].map(c => `<option value="${c}"${c === (item.channel || '') ? ' selected' : ''}>${c || '—'}</option>`).join('');
-    const fitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" class="pfit-cb" data-fit="${f}" ${(item.platform_fit || []).includes(f) ? 'checked' : ''} /> ${f}</label>`).join('');
+    const fitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" class="pfit-cb" data-fit="${f}" ${(item.platform_fit || []).includes(f) ? 'checked' : ''} /> ${productLabel(f)}</label>`).join('');
     fields += `
       <div class="field-row">
         <span class="field-label">Email</span>
@@ -539,7 +547,7 @@ function renderPanelFields(item) {
     const orgTierOpts = TIER_STAGES.map(t => `<option value="${t}"${t === (item.tier || 'Organization') ? ' selected' : ''}>${t}</option>`).join('');
     const orgLandedOpts = ['', ...TEAM_MEMBERS].map(m => `<option value="${m}"${m === (item.landed_by || '') ? ' selected' : ''}>${m || '—'}</option>`).join('');
     const orgChannelOpts = ['', 'Email', 'Instagram DM', 'LinkedIn', 'In Person', 'Other'].map(c => `<option value="${c}"${c === (item.channel || '') ? ' selected' : ''}>${c || '—'}</option>`).join('');
-    const orgFitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" class="pfit-cb" data-fit="${f}" ${(item.platform_fit || []).includes(f) ? 'checked' : ''} /> ${f}</label>`).join('');
+    const orgFitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" class="pfit-cb" data-fit="${f}" ${(item.platform_fit || []).includes(f) ? 'checked' : ''} /> ${productLabel(f)}</label>`).join('');
     fields += `
       <div class="field-row">
         <span class="field-label">Assigned To</span>
@@ -1024,7 +1032,7 @@ function practitionerForm(data = {}) {
   const statusOptions = PRACTITIONER_STAGES.map(s => `<option value="${s}"${s === (data.status || 'Not Contacted') ? ' selected' : ''}>${s}</option>`).join('');
   const tierOptions = TIER_STAGES.map(t => `<option value="${t}"${t === (data.tier || 'Individual') ? ' selected' : ''}>${t}</option>`).join('');
   const assignedOptions = ['', ...TEAM_MEMBERS].map(m => `<option value="${m}"${m === (data.assigned_to || currentUser) ? ' selected' : ''}>${m || '—'}</option>`).join('');
-  const fitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" name="fPlatformFit" value="${f}" ${(data.platform_fit || []).includes(f) ? 'checked' : ''} /> ${f}</label>`).join('');
+  const fitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" name="fPlatformFit" value="${f}" ${(data.platform_fit || []).includes(f) ? 'checked' : ''} /> ${productLabel(f)}</label>`).join('');
   return `
     <div class="form-row">
       <div class="form-group"><label>Name *</label><input class="form-input" id="fName" value="${data.name || ''}" /></div>
@@ -1067,7 +1075,7 @@ function orgForm(data = {}) {
   const statusOptions = ORG_STAGES.map(s => `<option value="${s}"${s === (data.status || 'Not Contacted') ? ' selected' : ''}>${s}</option>`).join('');
   const tierOptions = TIER_STAGES.map(t => `<option value="${t}"${t === (data.tier || 'Organization') ? ' selected' : ''}>${t}</option>`).join('');
   const assignedOptions = ['', ...TEAM_MEMBERS].map(m => `<option value="${m}"${m === (data.assigned_to || currentUser) ? ' selected' : ''}>${m || '—'}</option>`).join('');
-  const fitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" name="fPlatformFit" value="${f}" ${(data.platform_fit || []).includes(f) ? 'checked' : ''} /> ${f}</label>`).join('');
+  const fitChecks = PLATFORM_FIT_OPTIONS.map(f => `<label class="check-item"><input type="checkbox" name="fPlatformFit" value="${f}" ${(data.platform_fit || []).includes(f) ? 'checked' : ''} /> ${productLabel(f)}</label>`).join('');
   return `
     <div class="form-row">
       <div class="form-group"><label>Organization *</label><input class="form-input" id="fName" value="${data.name || ''}" /></div>
@@ -1272,6 +1280,18 @@ function bindGlobalEvents() {
       showMineOnly = true;
       localStorage.setItem('sc_mine', 'true');
       renderFilterBar();
+      renderMain();
+    });
+  }
+
+  // Product lens selector
+  const prodSel = document.getElementById('productSelect');
+  if (prodSel) {
+    prodSel.value = currentProduct;
+    prodSel.addEventListener('change', e => {
+      currentProduct = e.target.value;
+      localStorage.setItem('sc_product', currentProduct);
+      renderStats();
       renderMain();
     });
   }

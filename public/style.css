@@ -717,6 +717,18 @@ main {
 }
 .side .brand-text span { font-size: 11px; color: #7E96AE; letter-spacing: 0.03em; }
 
+.product-lens { padding: 0 4px 4px; margin-bottom: 8px; }
+.product-select {
+  width: 100%; background: var(--navy-2); color: #EAF1F8;
+  border: 1px solid var(--navy-3); border-radius: 9px;
+  padding: 9px 30px 9px 11px; font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer; outline: none; -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%238FB8DE' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center; background-size: 12px;
+}
+.product-select:hover { border-color: var(--powder); }
+.product-select option { color: #16202E; background: #fff; }
+
 .side-nav { display: flex; flex-direction: column; gap: 3px; }
 .side-nav .grp { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.09em; color: #63788F; margin: 16px 6px 6px; }
 .side-link, .side .tab-btn {

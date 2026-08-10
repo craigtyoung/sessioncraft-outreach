@@ -473,8 +473,10 @@ function deriveStage(p) {
 }
 
 app.get('/api/overview', (req, res) => {
-  const P = readJSON(PRACTITIONERS_FILE);
+  let P = readJSON(PRACTITIONERS_FILE);
   const S = readJSON(SENT_FILE);
+  const product = req.query.product || 'all';
+  if (product !== 'all') P = P.filter(p => Array.isArray(p.platform_fit) && p.platform_fit.includes(product));
   const norm = v => (v == null ? '' : String(v));
   const isContacted = p => { const s = norm(p.status); return s !== '' && s !== 'Not Contacted'; };
 

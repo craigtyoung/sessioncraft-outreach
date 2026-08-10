@@ -17,6 +17,22 @@ let currentTheme = localStorage.getItem('sc_theme_v2') || 'light';
 
 // ===== Pipeline Stages =====
 const PRACTITIONER_STAGES = ['Not Contacted', 'Contacted', 'Responded', 'Account Created', 'Demo Done', 'Onboarded', 'Affiliate'];
+// Challenge segment uses a creator-journey flow, derived from flags (no manual re-tagging).
+const CHALLENGE_STAGES = ['Participant', 'Account Created', 'Created a Meditation', 'Member'];
+function challengeStageOf(p) {
+  if (p.member === true) return 'Member';
+  if (p.playlistCreated === true) return 'Created a Meditation';
+  if (p.accountCreated === true) return 'Account Created';
+  return 'Participant';
+}
+function challengePatch(stage) {
+  return {
+    'Participant':            { accountCreated: false, playlistCreated: false, member: false },
+    'Account Created':        { accountCreated: true,  playlistCreated: false, member: false },
+    'Created a Meditation':   { accountCreated: true,  playlistCreated: true,  member: false },
+    'Member':                 { accountCreated: true,  playlistCreated: true,  member: true  }
+  }[stage] || {};
+}
 const ORG_STAGES = ['Not Contacted', 'Contacted', 'Responded', 'Demo', 'Partner'];
 const TIER_STAGES = ['Individual', 'Group Leader', 'Organization'];
 const PLATFORM_FIT_OPTIONS = ['SSB', 'Voice', 'Craft'];
@@ -108,6 +124,9 @@ function renderMain() {
   const data = getFilteredData();
   if (kanbanMode === 'tier' && (currentTab === 'practitioners' || currentTab === 'organizations')) {
     const html = `<div class="pipeline">${TIER_STAGES.map(t => renderColumn(t, data.filter(d => (d.tier || 'Individual') === t), 'tier')).join('')}</div>`;
+    document.getElementById('mainContent').innerHTML = html;
+  } else if (currentTab === 'practitioners' && currentSegment === 'challenge') {
+    const html = `<div class="pipeline">${CHALLENGE_STAGES.map(s => renderColumn(s, data.filter(d => challengeStageOf(d) === s), 'challenge')).join('')}</div>`;
     document.getElementById('mainContent').innerHTML = html;
   } else {
     const stages = currentTab === 'practitioners' ? PRACTITIONER_STAGES : currentTab === 'ideas' ? IDEAS_STAGES : ORG_STAGES;
@@ -1401,14 +1420,17 @@ document.addEventListener('drop', async e => {
   draggedId = null;
   if (!id || !newStage) return;
   const endpoint = currentTab === 'practitioners' ? 'practitioners' : currentTab === 'ideas' ? 'ideas' : 'organizations';
-  const updateField = colMode === 'tier' ? 'tier' : 'status';
+  let patch;
+  if (colMode === 'challenge') patch = challengePatch(newStage);
+  else if (colMode === 'tier') patch = { tier: newStage };
+  else patch = { status: newStage };
   await fetch(`/api/${endpoint}/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ [updateField]: newStage })
+    body: JSON.stringify(patch)
   });
   const idx = allData[currentTab].findIndex(d => d.id === id);
-  if (idx !== -1) allData[currentTab][idx][updateField] = newStage;
+  if (idx !== -1) allData[currentTab][idx] = { ...allData[currentTab][idx], ...patch };
   renderMain();
 })
 
